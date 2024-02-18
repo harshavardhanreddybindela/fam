@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<body bgcolor="#ffffe5">
+<head>
+  <script src="static/validation.js"></script>
+</head>
+<h1 align="middle">Student Register Form</h1>
+
+<form method="post" action="{{ url_for('update_student', id=student.student_id) }}" name="myform" onsubmit="return validateForm()">
+<input type="hidden" id="id" name="id" value="{{ student['student_id'] }}">
+<fieldset>
+  <legend>Edit your details below</legend>
+<table>
+<tr>
+  <td><label for="fname">First name:</label></td>
+  <td><input type="text" id="fname" name="fname" value="{{ student['fname'] }}"></td>
+</tr>
+<tr>
+  <td><label for="lname">Last name:</label></td>
+  <td><input type="text" id="lname" name="lname" value="{{ student['lname'] }}"></td>
+</tr>
+<tr>
+  <td><label for="email">Email:</label></td>
+  <td><input type="email" id="email" name="email" value="{{ student['email'] }}"></td>
+</tr>
+
+<tr>
+  <td><label for="phone">Phone No.:</label></td>
+  <td><input type="tel" id="phone" name="phone" value="{{ student['phone'] }}"></td>
+</tr>
+<td>
+<label for="branches">Branch:</label>
+<td>
+  <select name="branch">
+    <option value="">--select--</option>
+    {% for branch in branchlist %}
+      <option value="{{ branch.branch_id }}" {% if branch.branch_id == student['branch_id'] %} selected {% endif %}>{{ branch.branch_name }}</option>
+    {% endfor %}
+  </select>
+</td>
+</tr>
+
+<tr>
+<td>
+<label for="qualification">Qualification:</label>
+  <td>
+    <select name="qualification">
+      <option value="">--select--</option>
+      {% for qualification in qualificationlist %}
+        <option value="{{ qualification.qualification_id }}" {% if qualification.qualification_id == student['qualification_id'] %} selected {% endif %}>{{ qualification.qualification }}</option>
+      {% endfor %}
+    </select>
+  </td>
+</tr>
+<tr>
+  <td><label for="gender">Gender:</label></td>
+  <td>
+    <input type='radio' name='gender' value='male' {% if student.gender != "female" %}checked{% endif %}>Male
+    <input type="radio" name="gender" value='female' {% if student.gender == "female" %}checked{% endif %}>Female
+  </td>
+</tr>
+
+<tr>
+<td><label for="datepicker">Birthday:</label></td>
+<td><input type="date" id="dob" name="dob" value="{{ student['dob'] }}"></td>
+</tr>
+
+<tr>
+  <td><label for="address">Address:</label></td>
+  <td>
+    <textarea id="address" name="address" >{{ student['address'] }}</textarea>
+  </td>
+</tr>
+
+
+<tr>
+  <td><label for="city">City:</label></td>
+  <td><input type="text" id="city" name="city" value="{{ student['city'] }}"></td>
+</tr>
+<tr>
+  <td><label for="pincode">Pincode:</label></td>
+  <td><input type="text" id="pincode" name="pincode" value="{{ student['pincode'] }}"></td>
+</tr>
+<tr>
+  <td><label for="country">Country:</label></td>
+  <td><input type="text" id="country" name="country" value="{{ student['country'] }}"></td>
+</tr>
+<tr>
+  <td><label>Hobbies:</label></td>
+  <td>
+    {% for hobby in all_hobbies %}
+    <input type="checkbox" name="hobbies[]" value="{{ hobby.hobbies_id }}"
+    {% if hobby.hobbies_id|string in selected_hobbies %} checked {% endif %}>
+    <label>{{ hobby.hobby }}</label><br>
+{% endfor %}
+
+  </td>
+</tr>
+
+<tr align="middle">
+	<td><input type="submit" value="Submit" name="submit"></td>
+	<td><input type="reset" value="Reset"></td>
+</tr>
+  
+</table>
+</fieldset>
+</form>
+</body>
+</html>

@@ -12,5 +12,8 @@ def about():
 
 @bp.route("/register")
 def register():
-    return render_template("pages/register.html")
+    return render_template("pages/add_student.html")
 
+@bp.route("/menu")
+def menu():
+    return render_template("pages/menu.html")

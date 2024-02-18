@@ -4,8 +4,6 @@ function validateForm() {
     alert("Please Enter First Name");
     return false;
   }
-}
-  /*
   let b = document.getElementById("lname").value;
   if (b==""){
     alert("Please Enter Last Name");
@@ -80,4 +78,3 @@ if (strUser === "select") {
     }
     return true;
 }
-*/
