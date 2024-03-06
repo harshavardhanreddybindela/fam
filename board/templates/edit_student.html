@@ -1,9 +1,16 @@
 <!DOCTYPE html>
 <html>
 <body bgcolor="#ffffe5">
+  {% include("menu.html") %}
 <head>
   <script src="static/validation.js"></script>
-</head>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="static/validation.js"></script>
+	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jqBootstrapValidation/1.3.6/jqBootstrapValidation.js"></script>
+  </head>
 <h1 align="middle">Student Register Form</h1>
 
 <form method="post" action="{{ url_for('update_student', id=student.student_id) }}" name="myform" onsubmit="return validateForm()">
@@ -11,9 +18,15 @@
 <fieldset>
   <legend>Edit your details below</legend>
 <table>
+  <tr>
+    <td><label for="profile">Profile Picture:</label></td>
+    <td>
+        <input type="file" id="profile" name="profile" value=" {{student['profile']}} ">
+    </td>
+  </tr>
 <tr>
   <td><label for="fname">First name:</label></td>
-  <td><input type="text" id="fname" name="fname" value="{{ student['fname'] }}"></td>
+  <td><input type="text" id="fname" name="fname" value=" {{ student['fname'] }} "></td>
 </tr>
 <tr>
   <td><label for="lname">Last name:</label></td>
@@ -28,15 +41,17 @@
   <td><label for="phone">Phone No.:</label></td>
   <td><input type="tel" id="phone" name="phone" value="{{ student['phone'] }}"></td>
 </tr>
-<td>
+<tr>
+  <td>
 <label for="branches">Branch:</label>
 <td>
   <select name="branch">
     <option value="">--select--</option>
-    {% for branch in branchlist %}
-      <option value="{{ branch.branch_id }}" {% if branch.branch_id == student['branch_id'] %} selected {% endif %}>{{ branch.branch_name }}</option>
+    {% for branch in data['branchlist'] %}
+        <option value="{{ branch.branch_id }}" {% if branch.branch_id == student['branch_name'] %} selected {% endif %}>{{ branch.branch_name }}</option>
     {% endfor %}
-  </select>
+</select>
+
 </td>
 </tr>
 
@@ -46,8 +61,8 @@
   <td>
     <select name="qualification">
       <option value="">--select--</option>
-      {% for qualification in qualificationlist %}
-        <option value="{{ qualification.qualification_id }}" {% if qualification.qualification_id == student['qualification_id'] %} selected {% endif %}>{{ qualification.qualification }}</option>
+      {% for qualification in data['qualificationlist'] %}
+        <option value="{{ qualification.qualification_id }}" {% if qualification.qualification_id == student['qualification'] %} selected {% endif %}>{{ qualification.qualification }}</option>
       {% endfor %}
     </select>
   </td>
@@ -88,18 +103,16 @@
 <tr>
   <td><label>Hobbies:</label></td>
   <td>
-    {% for hobby in all_hobbies %}
-    <input type="checkbox" name="hobbies[]" value="{{ hobby.hobbies_id }}"
-    {% if hobby.hobbies_id|string in selected_hobbies %} checked {% endif %}>
-    <label>{{ hobby.hobby }}</label><br>
-{% endfor %}
-
+    {% for hobby in data['all_hobbies'] %}
+    <input type="checkbox" name="hobbies[]" value="{{ hobby['hobbies_id'] }}" 
+        {% if hobby['hobbies_id']|string in data['selected_hobbies'] %} checked {% endif %}>
+    <label>{{ hobby['hobby'] }}</label><br>
+    {% endfor %}
   </td>
 </tr>
 
 <tr align="middle">
-	<td><input type="submit" value="Submit" name="submit"></td>
-	<td><input type="reset" value="Reset"></td>
+	<td><input type="submit" value="Submit" name="submit" class="btn btn-success" class="form-control form-control-lg" ></td>
 </tr>
   
 </table>

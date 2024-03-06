@@ -4,22 +4,46 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 	<script src="static/validation.js"></script>
 	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jqBootstrapValidation/1.3.6/jqBootstrapValidation.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+	<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jqBootstrapValidation/1.3.6/jqBootstrapValidation.js"></script>
+	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+  <style>
+    .glyphicon {
+      position: relative;
+      top: 1px;
+      display: inline-block;
+      font-family: 'Glyphicons Halflings';
+      font-style: normal;
+      font-weight: 400;
+      line-height: 1;
+      -webkit-font-smoothing: antialiased;
+    }
+    .btn-primary {
+      color: #fff;
+      background-color: #337ab7;
+      border-color: #2e6da4;
+  }
+    .btn-pencil{
+      color: #fff;
+      background-color: #337ab7;
+      border-color: #2e6da4;
+    }
+    .sort-active {
+        font-weight: bold;
+    }
 
+    .sort-asc {
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAl/bNNAAAACXBIWXMAAAsTAAIEUgDoIAAAAGwAAABj1JTS+AAAAoUlEQVR4nGNgAIlzY/4Dggb7G//F0k2A7298AIIBFo2QNgL+/QAA+2oEAAA6A6yCAAAAAElFTNkY3QAAAA8BAgAJBgkYAAAIC1BAAAgAEAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAIC
+    )}
+</style>
+{% include("menu.html") %}
 <h1 align="middle">Student Register Form</h1>
+
 <form method="POST" action="/register" name="myform" onsubmit="return validateForm()" enctype="multipart/form-data">
 <fieldset>
 	<legend>Enter details below</legend>
 <table>
-	<div class="container">
-		<div class="text-center">
-			<a href="/list" class="btn btn-primary">
-			<span class="glyphicon glyphicon-plus"></span> Student List
-			</a>
-		</div>
-	</div>
 <tr>
 	<td><label for="myfile">Profile Picture:</label></td>
 	<td><input type="file" id="profile" name="profile"></td>
@@ -99,7 +123,7 @@
 </tr>
 <tr>
 	<td>
-	<button class="btn btn-success" type="submit" class="form-control form-control-lg" class="btn btn-primary" id="submit">Register</button>
+	<button class="btn btn-success" type="submit" class="form-control form-control-lg" id="submit">Register</button>
 </td>
 </tr>
 

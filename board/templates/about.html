@@ -1,5 +1,4 @@
-{% extends 'base.html' %} <!-- This will add the home.html to the base.html which means "extends will help to connect pages"-->
-
+{% include("menu.html") %}
 {% block header %} 
   <h2>{% block title %}About{% endblock title %}</h2>
 {% endblock header %}
