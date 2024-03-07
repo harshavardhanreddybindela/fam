@@ -83,7 +83,7 @@ def add_student():
 # Define a route for the registration form
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    # Extract student info from form da
+    # Extract student info from form data
     student_info = request.form.to_dict()
     if request.method == 'POST':
         
