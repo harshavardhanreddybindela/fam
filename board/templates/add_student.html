@@ -1,0 +1,180 @@
+<html>
+<body bgcolor="#ffffe5">
+<head>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="static/validation.js"></script>
+	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+	<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jqBootstrapValidation/1.3.6/jqBootstrapValidation.js"></script>
+	<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+  <style>
+    .glyphicon {
+      position: relative;
+      top: 1px;
+      display: inline-block;
+      font-family: 'Glyphicons Halflings';
+      font-style: normal;
+      font-weight: 400;
+      line-height: 1;
+      -webkit-font-smoothing: antialiased;
+    }
+    .btn-primary {
+      color: #fff;
+      background-color: #337ab7;
+      border-color: #2e6da4;
+  }
+    .btn-pencil{
+      color: #fff;
+      background-color: #337ab7;
+      border-color: #2e6da4;
+    }
+    .sort-active {
+        font-weight: bold;
+    }
+
+    .sort-asc {
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAl/bNNAAAACXBIWXMAAAsTAAIEUgDoIAAAAGwAAABj1JTS+AAAAoUlEQVR4nGNgAIlzY/4Dggb7G//F0k2A7298AIIBFo2QNgL+/QAA+2oEAAA6A6yCAAAAAElFTNkY3QAAAA8BAgAJBgkYAAAIC1BAAAgAEAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAIC
+    )}
+</style>
+{% include("menu.html") %}
+<h1 align="middle">Student Register Form</h1>
+
+<form method="POST" action="/register" name="myform" onsubmit="return validateForm()" enctype="multipart/form-data">
+<fieldset>
+	<legend>Enter details below</legend>
+<table>
+<tr>
+	<td><label for="myfile">Profile Picture:</label></td>
+	<td><input type="file" id="profile" name="profile"></td>
+<tr>
+	<td><label for="fname">First name:</label></td>
+	<td><input type="text" id="fname" name="fname"></td>
+</tr>
+<tr>
+	<td><label for="lname">Last name:</label></td>
+	<td><input type="text" id="lname" name="lname"></td>
+</tr>
+<tr>
+	<td><label for="email">E-mail</label>
+	<td><input type="email" id="email" name="email" >
+	</td>
+	<td><span id="emailMsg"></span></td>
+</tr>
+
+<tr>
+    <td><label for="phone">Phone No.:</label></td>
+    <td><input inputmode="number" id="phone" name="phone" oninput="this.value = this.value.replace(/\D+/g, '')" /></td>
+    <td><span id="phoneMsg"></span></td>
+</tr>
+
+
+<tr>
+	<td><label for="branches">Branch:</label></td>
+	<td><select name="branch" id="branch">
+		<option value="">--select--</option>
+        {% for row in data['branchlist'] %}
+            <option value="{{ row['branch_id']}}">{{ row['branch_name'] }}</option>
+        {% endfor %}
+    </select></td>
+</tr>
+<tr>
+	<td><label for="Qualification">Qualification:</label></td>
+	<td><select type="option" name="qualification" id="qualification">
+		<option value="">--select--</option>
+        {% for row in data['qualificationlist'] %}
+            <option value="{{ row['qualification_id']}}">{{ row['qualification'] }}</option>
+        {% endfor %}
+    </select></td>
+</tr>
+<tr>
+	<td><label for="gender">Gender:</label></td>
+	<td><input type="radio" name="gender" id="gender" value="male"> Male <input type="radio" name="gender" id="gender" value="female"> Female </td>
+</tr>
+<tr>
+	<td><label for="datepicker">Birthday:</label></td>
+	<td><input type="date" id="dob" name="dob"></td>
+</tr>
+<tr>
+	<td><label for="address">Address:</label></td>
+	<td><textarea type="text" name="address"></textarea></td>
+</tr>
+<tr>
+	<td><label for="city">City:</label></td>
+	<td><input type="text" id="city" name="city"></td>
+</tr>
+<tr>
+	<td><label for="pincode">Pincode:</label></td>
+	<td><input type="text" id="pincode" name="pincode"></td>
+</tr>
+<tr>
+	<td><label for="country">Country:</label></td>
+	<td><input type="text" id="country" name="country"></td>
+</tr>
+<tr>
+	<td><label>Hobbies:</label></td>
+</tr>
+<tr>
+	{% for row in data['hobbies'] %}
+	<tr>
+		<td><input type="checkbox" id="hobby" name="hobbies[]" value="{{ row['hobbies_id']  }}">{{ row['hobby'] }}</input></td>
+    </tr>
+	{% endfor %}
+</tr>
+<tr>
+	<td>
+	<button class="btn btn-success" type="submit" class="form-control form-control-lg" id="submit">Register</button>
+</td>
+</tr>
+
+</table>
+</fieldset>
+</form>
+	<script type="text/javascript">
+		$(document).ready(function(){
+			$("#sumbit").hide();
+			$("#phone").focusout(function(){
+				if(validatePhone()){
+					$("#phone").css("border","1px solid green");
+					$("#phoneMsg").html("<p class='text-success'>Valid</p>");
+				}else{
+					$("#phone").css("border","2px solid red");
+					$("#phoneMsg").html("<p class='text-danger'>Invalid</p>");
+				}
+			});
+		function validatePhone() {
+			var phone=$("#phone").val();
+			var phoneRe = /^[2-9]\d{2}[2-9]\d{2}\d{4}$/;
+			if(phoneRe.test(phone)){
+				return true;
+			}else{
+				return false;
+			}
+		}
+		});
+	</script>
+	<script type="text/javascript">
+		$(document).ready(function() {
+		$("#email").on('blur', (event) => {
+		$('#emailMsg').hide();
+		const emailVal = event.target.value;
+		$.ajax({
+			type: "GET",
+			url: "/email_check",
+			data: { emailVal: emailVal },
+			success: function(emailMsg) {
+				$('#emailMsg').show();
+				$("#emailMsg").html(emailMsg);
+			},
+			error: function(jqXHR, textStatus, errorThrown) {
+				$('#emailMsg').show();
+				$("#emailMsg").html(textStatus + " " + errorThrown);
+				console.log(errorThrown)
+			}
+		});
+		});
+		});
+	</script>
+</head>
+</body>
+</html>

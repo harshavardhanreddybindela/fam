@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student List</title>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .glyphicon {
+          position: relative;
+          top: 1px;
+          display: inline-block;
+          font-family: 'Glyphicons Halflings';
+          font-style: normal;
+          font-weight: 400;
+          line-height: 1;
+          -webkit-font-smoothing: antialiased;
+        }
+        .btn-primary {
+          color: #fff;
+          background-color: #337ab7;
+          border-color: #2e6da4;
+      }
+        .btn-pencil{
+          color: #fff;
+          background-color: #337ab7;
+          border-color: #2e6da4;
+        }
+        .sort-active {
+            font-weight: bold;
+        }
+
+        .sort-asc {
+            background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAl/bNNAAAACXBIWXMAAAsTAAIEUgDoIAAAAGwAAABj1JTS+AAAAoUlEQVR4nGNgAIlzY/4Dggb7G//F0k2A7298AIIBFo2QNgL+/QAA+2oEAAA6A6yCAAAAAElFTNkY3QAAAA8BAgAJBgkYAAAIC1BAAAgAEAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAICAAAIC
+        )}
+    </style>
+    <script>
+      function delete_student(id) {
+          if (confirm("Are you sure you want to delete this student?")) {
+              fetch(`/delete_student/${id}`, {
+                  method: 'GET'
+              })
+              .then(response => response.json())
+              .then(data => {
+                  if (data.message === "Success") {
+                      alert("Student deleted successfully");
+                  } else {
+                      alert("Failed to delete student");
+                  }
+              })
+          }
+      }
+  </script>
+  
+  
+</head>
+<body>
+  
+    <table class="sortable">
+      <h2 align="center">Student List</h2>
+      {% include("menu.html") %}
+      <div class="text-center">
+      </div><br>
+        <tr>
+            <th>
+              <a href="{{ url_for('list_students', sort='student_id', current_sort=sort, current_order=order, page=page) }}">Student ID</a>
+            </th>
+            <th>
+              <a href="{{ url_for('list_students', sort='fname', current_sort=sort, current_order=order, page=page) }}">First Name</a>
+            </th>
+            <th>
+              <a href="{{ url_for('list_students', sort='lname', current_sort=sort, current_order=order, page=page) }}">Last Name</a>
+            </th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Branch</th>
+            <th>Qualification</th>
+            <th>DOB</th>
+            <th>Address</th>
+            <th>City</th>
+            <th>Pincode</th>
+            <th>Country</th>
+            <th>Hobbies</th>
+            <th>Action</th>
+        </tr>
+        {% for student in data.studentlist %}
+        <tr>
+            <td>{{ student.student_id }}</td>
+            <td>{{ student.fname }}</td>
+            <td>{{ student.lname }}</td>
+            <td>{{ student.email }}</td>
+            <td>{{ student.phone }}</td>
+            <td>{{ student.branch_name }}</td>
+            <td>{{ student.qualification }}</td>
+            <td>{{ student.dob }}</td>
+            <td>{{ student.address }}</td>
+            <td>{{ student.city }}</td>
+            <td>{{ student.pincode }}</td>
+            <td>{{ student.country }}</td>
+            <td>{{ student.hobbies_string }}</td>
+            <td>
+              <a href="{{ url_for('delete_student', id=student['student_id']) }}" class="btn btn-danger" onclick="deleteStudent({{ student['student_id'] }})">Delete</a>
+              <a href="{{ url_for('edit_student', id=student['student_id']) }}" class="btn btn-pencil">Edit</a>
+            </td>
+        </tr>
+        {% endfor %}
+        
+    </table><br>
+    <navbar>
+      <a href="{{ url_for('list_students', page=prev_page) }}" class="btn btn-primary">Previous Page</a><br>
+      <a href="{{ url_for('list_students', page=next_page) }}" class="btn btn-primary">Next Page</a>
+    </navbar>
+    <div class="text-center" style="margin-bottom: 20px;">
+      <a href="{{ url_for('export_csv') }}" class="btn btn-success">
+          <span class="glyphicon glyphicon-export"></span> Export to CSV
+      </a>
+    </div>
+</body>
+</html>
