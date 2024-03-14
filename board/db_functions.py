@@ -10,8 +10,8 @@ def db_connection():
     return conn
 
 def post_student():
-    insert_student_query = """INSERT INTO student (profile,fname, lname, email, phone, gender, dob, address, city, pincode, country, branch_name, qualification)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s)"""
+    insert_student_query = """INSERT INTO student (profile,fname, lname, email, phone, gender, dob, address, city, pincode, country, branch_name, qualification,password)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s)"""
     return insert_student_query
 
 def post_hobbies():
@@ -21,17 +21,21 @@ def post_hobbies():
 def get_students(id=None, sort='student_id', order='asc', offset=0):
     if id is None:
         student_list = """
-                        SELECT s.*, group_concat(h.hobby SEPARATOR ', ') as hobbies_string FROM student s
-                        JOIN student_hobbies sh on (sh.student_id = s.student_id)
-                        JOIN hobbies h on (h.hobbies_id = sh.hobbies_id)
-                        GROUP BY s.student_id
-                        ORDER BY {} {} LIMIT 4 OFFSET %s""".format(sort, order)
+            SELECT s.student_id, fname, lname, email, phone, gender, dob, address, city, pincode, country, branch_name, qualification, created_by, DATE(created_on) AS created_date, GROUP_CONCAT(h.hobby SEPARATOR ', ') AS hobbies_string 
+            FROM student s
+            LEFT JOIN student_hobbies sh ON (sh.student_id = s.student_id)
+            LEFT JOIN hobbies h ON (h.hobbies_id = sh.hobbies_id)
+            GROUP BY s.student_id
+            ORDER BY {} {} LIMIT 4 OFFSET %s""".format(sort, order)
     else:
-        student_list = """
-        SELECT s.*,group_concat(hobbies_id separator '|') as hobbies FROM student s
-        JOIN student_hobbies sh ON s.student_id = sh.student_id  WHERE s.student_id = %s
-        GROUP BY s.student_id
-        """
+        student_list ="""
+            SELECT s.*, GROUP_CONCAT(hobbies_id separator '|') AS hobbies, DATE(created_on) AS created_date
+            FROM student s
+            JOIN student_hobbies sh ON s.student_id = sh.student_id
+            WHERE s.student_id = %s
+            GROUP BY s.student_id
+            ORDER BY {} {} LIMIT 4 OFFSET %s
+        """.format(sort, order)
     return student_list
 
 def get_delete_student(id):
@@ -39,7 +43,7 @@ def get_delete_student(id):
     return delete_student_query
 
 def edit_student(student_id):
-    update_query="""UPDATE student 
+    update_query="""UPDATE student
                         SET profile=%s, fname=%s, lname=%s, email=%s, phone=%s,
                         gender=%s, dob=%s, address=%s, city=%s, pincode=%s,
                         country=%s, qualification=%s, branch_name=%s
@@ -52,6 +56,12 @@ def get_student_details(cursor, student_id):
     return cursor.fetchone()  # Assuming this returns a dictionary
 
 
+def get_student_email(cursor, email):
+    cursor.execute("SELECT student_id, fname FROM student WHERE email = %s", (email,))
+    student_info = cursor.fetchone()
+    return student_info
+
+
 def get_hobbies_list(cursor):
     get_hobbies_query = "SELECT hobbies_id, hobby FROM hobbies ORDER BY hobby ASC"
     cursor.execute(get_hobbies_query)
@@ -60,8 +70,8 @@ def get_hobbies_list(cursor):
 
 def get_student_hobbies(cursor, student_id):
     get_student_hobbies_query = """SELECT GROUP_CONCAT(hobbies_id SEPARATOR '|') AS hobby_ids
-               FROM student_hobbies
-               WHERE student_id = %s"""
+            FROM student_hobbies
+            WHERE student_id = %s"""
     cursor.execute(get_student_hobbies_query, (student_id,))
     result = cursor.fetchone()
     return result['hobby_ids'].split('|')
@@ -94,8 +104,7 @@ def get_email(id):
     if result is not None:
         user_email = result[0]
     else:
-        # Handle the case where no data was found
-        user_email = None 
+        user_email = None
     conn.close()
     return user_email
 
