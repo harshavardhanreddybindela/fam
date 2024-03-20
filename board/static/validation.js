@@ -13,7 +13,7 @@ function validateForm() {
   if (c==""){
     alert("Please Enter Email");
     return false;
-  } 
+  }
   let d = document.getElementById("phone").value;
     if (d==""){
     alert("Please Enter Phone number");

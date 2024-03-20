@@ -1,38 +1,59 @@
-from curses import flash
-from functools import wraps
-import smtplib
-import os
-import sys
-import traceback
-from argon2 import verify_password
-from argon2 import PasswordHasher
-from argon2.exceptions import InvalidHashError
-
-from flask_session.__init__ import Session
-from werkzeug.security import check_password_hash
-from flask_mail import Mail, Message
+# Standard library imports
 import csv
 import io
-from flask import Flask, render_template, request, redirect, session, url_for, jsonify,Response
+import os
+import smtplib
+import sys
+import traceback
+from curses import flash
+
+# Third-party library imports
+from argon2 import PasswordHasher, verify_password
+from argon2.exceptions import InvalidHashError
+from fpdf import FPDF
+import pandas as pd
+from flask import Flask, jsonify, redirect, render_template, request, Response, session, url_for
+from flask_mail import Mail, Message
+from flask_session.__init__ import Session
+from werkzeug.security import check_password_hash, generate_password_hash
 import pymysql
+
+# Local application/library specific imports
 from config.db import DATABASE_CONFIG
 from config.middleware import login_validation
-from db_functions import get_branch_list, get_email, get_qualification_list, get_student_email, get_students,get_delete_hobbies,db_connection, post_edit_hobbies,post_student,post_hobbies,get_delete_student,get_hobbies_list,edit_student,get_student_hobbies,get_student_details
-from werkzeug.security import generate_password_hash
-# # Initialize Flask app
+from db_functions import (db_connection, get_branch_list, get_delete_student, get_details, get_hobbies_list, get_qualification_list, get_student_details,
+                        get_student_hobbies, get_students, post_hobbies, post_student)
+
+# Create a new Flask application instance
 app = Flask(__name__)
-# mail = Mail(app)
+
+# Configure session to be not permanent and use the filesystem for storage
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
+
+# Initialize the session with the app configuration
 Session(app)
+
+# Establish a database connection
 conn = db_connection()
 
+# Mail configuration
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = 'harshareddy4400@gmail.com'
 app.config['MAIL_PASSWORD'] = 'gdzc jhpd tyqs aaks'
+
+# File upload configuration
+app.config['UPLOAD_FOLDER'] = 'uploads/'
+
+# Initialize the Flask-Mail extension with the app configuration
 mail = Mail(app)
+
+@app.before_request
+def before_request():
+    if not session.get("user_id") and request.endpoint not in ['login']:
+        return redirect(url_for('login'))
 
 @app.route("/")
 def index():
@@ -40,18 +61,104 @@ def index():
         return redirect("/login")
     return render_template('index.html')
 
-@app.route('/home')
+def encrypt_password(password):
+    return generate_password_hash(password)
+
+def validate_password(password, stored_hash):
+    return check_password_hash(stored_hash, password)
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    error = None
+    conn = None
+    try:
+        if request.method == 'POST':
+            email = request.form['email']
+            password = request.form['password']
+
+            if not email or not password:
+                error = "Please enter both email and password."
+                return render_template('login.html', error=error)
+
+            conn = db_connection()
+            with conn.cursor() as cursor:
+                cursor.execute('SELECT student_id, fname, email, password FROM student WHERE email = %s', (email,))
+                user = cursor.fetchone()
+
+            if user:
+                hashed_password = user['password']
+                ph = PasswordHasher()
+                try:
+                    ph.verify(hashed_password, password)
+                    session['user_id'] = user['student_id']
+                    session['username'] = user['email']
+                    session['fname'] = user['fname']
+                    return redirect(url_for('home'))
+                except Exception as e:
+                    error = "Invalid email or password."
+            else:
+                error = "User not found."
+
+    except Exception as e:
+        error = "An error occurred: {}".format(str(e))
+        traceback.print_exc()
+
+    finally:
+        if conn:
+            conn.close()
+    return render_template('login.html', error=error)
+
+@app.route('/home', methods=['GET', 'POST'])
 def home():
+    """
+    Serves the home page. Handles both GET and POST requests.
+    On POST, it processes login attempts and file uploads.
+    For file uploads, it saves the file and processes its content with parseCSV function.
+    Sets a welcome message based on session info.
+    """
+    # POST request handling logic
+    if request.method == 'POST':
+        if 'login' in request.form:
+            # Process login attempt
+            # session['fname'] = 'UserFirstName'  # Example session variable setting
+            flash('Login successful')
+            return redirect(url_for('home'))
+        elif 'files' in request.files:
+            # Process file upload
+            uploaded_file = request.files['files']
+            if uploaded_file.filename != '':
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], uploaded_file.filename)
+                uploaded_file.save(file_path)
+                parseCSV(file_path)
+                flash('File uploaded and processed successfully')
+                return redirect(url_for('home'))
+    
+    # GET request handling, setting welcome message
     if 'fname' in session:
         welcomeMsg = f"Welcome, {session['fname']}!"
     else:
         welcomeMsg = "Welcome!"
     return render_template('home.html', message=welcomeMsg)
 
-@app.before_request
-def before_request():
-    if not session.get("user_id") and request.endpoint not in ['login']:
-        return redirect(url_for('login'))
+def parseCSV(filepath):
+    """
+    Parses the CSV file at the given filepath and inserts each row into the 'branches' database table.
+    Uses pandas for reading CSV and executes SQL insert commands for each row.
+    Handles exceptions by rolling back any changes in case of an error.
+    """
+    cursor = conn.cursor()
+    col_names = ['branch_name']  # Define column names for parsing
+    
+    csvData = pd.read_csv(filepath, names=col_names, header=None)
+    try:
+        for i, row in csvData.iterrows():
+            sql = "INSERT INTO branches (branch_name) VALUES (%s)"
+            value = (row['branch_name'],)
+            cursor.execute(sql, value)
+        conn.commit()
+    except Exception as e:
+        print(f"Error: {e}")
+        conn.rollback()
 
 @app.route('/add_student')
 @login_validation
@@ -60,10 +167,10 @@ def add_student():
     try:
         data={}
         cursor.execute("SELECT branch_id, branch_name FROM branches ORDER BY branch_id ASC")
-        data['branchlist'] = cursor.fetchall()
+        data['branch_list'] = cursor.fetchall()
         
         cursor.execute("SELECT qualification_id, qualification FROM qualifications ORDER BY qualification_id ASC")
-        data['qualificationlist'] = cursor.fetchall()
+        data['qualification_list'] = cursor.fetchall()
         
         cursor.execute("SELECT hobbies_id, hobby FROM hobbies ORDER BY hobbies_id ASC")
         data['hobbies'] = cursor.fetchall()
@@ -136,41 +243,84 @@ def register():
     return render_template('add_student.html', data=data,error=error)
 
 @app.route('/list/', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/list/page/<int:page>', methods=['GET'])
+@app.route('/list/page/<int:page>', methods=['GET', 'POST'])
 @login_validation
 def list_students(page):
     conn = db_connection()
     cursor = conn.cursor()
-    id = request.args.get('id', None)
+
+    # Search functionality integrated
+    search = request.args.get('search', '')
+    offset = request.args.get('offset', 0)
     sort = request.args.get('sort', 'student_id')
     order = request.args.get('order', 'asc').lower()
     current_sort = request.args.get('current_sort')
     current_order = request.args.get('current_order', 'asc')
+    
     prev_page = max(page - 1, 1)
     next_page = page + 1
     offset = 4 * (page - 1)
 
     if sort == current_sort:
-        order = 'desc' if current_order == 'asc' else 'desc'
-    valid_sort_columns = ['student_id', 'fname', 'lname', 'email', 'phone', 'branch_name', 'qualification', 'dob', 'address', 'city', 'pincode', 'country']
-    if sort not in valid_sort_columns or order not in ['asc', 'desc']:
-        sort = 'student_id','fname'
-        order = 'asc'
+        order = 'desc' if current_order == 'asc' else 'asc'
+
+    valid_sort_columns = [
+        'student_id', 'fname', 'lname', 'email', 'phone', 'branch_name',
+        'qualification', 'dob', 'address', 'city', 'pincode', 'country','created_date'
+    ]
+    
+    if sort not in valid_sort_columns:
+        sort = 'student_id'
         
+    if order not in ['asc', 'desc']:
+        order = 'asc'
+
     try:
         data = {}
-        student_list_query = get_students(id=id, sort=sort, order=order, offset=offset)
-        cursor.execute(student_list_query, (offset,))
+        if search:
+            search_term = f'%{search}%'
+            student_list_query = """
+                SELECT s.student_id, fname, lname, email, phone, gender, dob, address, city, pincode, country, branch_name, qualification, created_by, DATE(created_on) AS created_date, GROUP_CONCAT(h.hobby SEPARATOR ', ') AS hobbies_string 
+                FROM student s
+                LEFT JOIN student_hobbies sh ON sh.student_id = s.student_id
+                LEFT JOIN hobbies h ON h.hobbies_id = sh.hobbies_id
+                WHERE fname LIKE %s OR lname LIKE %s OR email LIKE %s
+                GROUP BY s.student_id
+                ORDER BY {} {} LIMIT 4 OFFSET %s""".format(sort, order)
+            cursor.execute(student_list_query, (search_term, search_term, search_term, offset))
+        else:
+            student_list_query = get_students()
+            cursor.execute(student_list_query, (offset,))
+
         data['studentlist'] = cursor.fetchall()
-        print(data['studentlist'])
-        # data['all_hobbies'] = get_hobbies_list(cursor)
-        # print(data['all_hobbies'])
-        # data['hobbies_dict'] = dict((hobby['hobbies_id'], hobby['hobby']) for hobby in data['all_hobbies'])
-        # print(data['studentlist'])
-        return render_template('student_list.html', page=page, data=data, prev_page=prev_page, next_page=next_page)
+        data['all_hobbies'] = get_hobbies_list(cursor)
+        data['hobbies_dict'] = {hobby['hobbies_id']: hobby['hobby'] for hobby in data['all_hobbies']}
+
+        return render_template('student_list.html', page=page, data=data,prev_page=prev_page, next_page=next_page, search=search)
     except Exception as e:
         print(f"Error: {e}")
         return render_template('error_page.html', error_message=str(e))
+    finally:
+        conn.close()
+
+# Define a route for editing a student
+@app.route('/edit_student/<int:id>', methods=['GET'])
+@login_validation
+def edit_student(id):
+    conn = db_connection()
+    try:
+        data={}
+        with conn.cursor(pymysql.cursors.DictCursor) as cursor:
+            data['all_hobbies'] = get_hobbies_list(cursor)
+            data['selected_hobbies'] = get_student_hobbies(cursor, id)
+            data['branch_list'] = get_branch_list(cursor)
+            data['qualification_list'] = get_qualification_list(cursor)
+            student = get_student_details(cursor, id)
+            if not student:
+                return "Student not found", 404
+            return render_template('edit_student.html',student=student, data=data)
+    except Exception as e:
+        return "Error fetching data", 500
     finally:
         conn.close()
 
@@ -192,28 +342,6 @@ def delete_student(id):
     finally:
         if conn:
             conn.close()
-
-
-# Define a route for editing a student
-@app.route('/edit_student/<int:id>', methods=['GET'])
-@login_validation
-def edit_student(id):
-    conn = db_connection()
-    try:
-        data={}
-        with conn.cursor(pymysql.cursors.DictCursor) as cursor:
-            data['all_hobbies'] = get_hobbies_list(cursor)
-            data['selected_hobbies'] = get_student_hobbies(cursor, id)
-            data['branch_list'] = get_branch_list(cursor)
-            data['qualification_list'] = get_qualification_list(cursor)
-            student = get_student_details(cursor, id)
-            if not student:
-                return "Student not found", 404
-            return render_template('edit_student.html', student=student, data=data)
-    except Exception as e:
-        return "Error fetching data", 500
-    finally:
-        conn.close()
 
 # Define a route for updating a student's information
 @app.route('/update_student/<int:id>', methods=['POST'])
@@ -296,6 +424,71 @@ def email_check():
             conn.close()
     return True
 
+@app.route('/download_pdf/<int:id>', methods=['GET'])
+def download_pdf(id):
+    conn = None
+    cursor = None
+    try:
+        conn = db_connection()
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+        
+        cursor.execute("SELECT CONCAT(fname, ' ', lname) AS name , email, phone FROM student WHERE student_id = %s", (id,))
+        
+        result = cursor.fetchall()
+
+        if not result:
+            return "No data available for the specified student.", 404
+
+        pdf = FPDF()
+        pdf.add_page()
+        
+        page_width = pdf.w - 2 * pdf.l_margin
+        
+        pdf.set_font('Times','B',14.0)
+        pdf.cell(page_width, 0.0, 'Student Data', align='C')
+        pdf.ln(10)
+        
+        pdf.set_font('Courier', '', 12)
+        
+        col_widths = {
+            'Name': page_width * 0.3,
+            'Email': page_width * 0.4,
+            'Phone': page_width * 0.3
+        }
+        
+        # Header
+        pdf.cell(col_widths['Name'], 10, 'Name', border=1)
+        pdf.cell(col_widths['Email'], 10, 'Email', border=1)
+        pdf.cell(col_widths['Phone'], 10, 'Phone', border=1)
+        
+        pdf.ln(1)
+        
+        th = pdf.font_size
+        tr =pdf.font_size
+        for row in result:
+            pdf.cell(col_widths, th, row.get('name', ''), border=1)
+            pdf.cell(col_widths, th, row.get('email', ''), border=1)
+            pdf.cell(col_widths, th, row.get('phone', ''), border=1)
+            pdf.ln(th)
+        
+        pdf.ln(15)
+        
+        pdf.set_font('Times','',10.0)
+        pdf.cell(page_width, 0.0, '- end of report -', align='C')
+        
+        output = pdf.output(dest='S').encode('latin-1')
+        return Response(output, mimetype='application/pdf', headers={'Content-Disposition': f'attachment;filename=student_report.pdf'})
+    except Exception as e:
+        print(e)
+        return "An error occurred while generating the report for the specified student.", 500
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+        
+
 @app.route('/export_students_csv')
 def export_csv():
     conn = db_connection()
@@ -306,17 +499,9 @@ def export_csv():
         student_info = get_student_details(cursor, user_id)
         if student_info:
             fname = student_info['fname']
-            
             # Query to retrieve all students along with their hobbies
-            cursor.execute("""SELECT s.*, group_concat(h.hobby separator '|') as hobbies
-                            FROM student s
-                            LEFT JOIN student_hobbies sh ON s.student_id = sh.student_id
-                            LEFT JOIN hobbies h ON sh.hobbies_id = h.hobbies_id
-                            GROUP BY s.student_id""")
+            cursor.execute(get_details(cursor, id))
             result = cursor.fetchall()
-            # print("-------------------------------------")
-            # print(result)
-            # print("-------------------------------------")
             if result:
                 si = io.StringIO()
                 cw = csv.writer(si)
@@ -344,52 +529,50 @@ def export_csv():
     else:
         return 'User not logged in.'
 
-def encrypt_password(password):
-    return generate_password_hash(password)
+@app.route('/crud_branches', methods=['POST', 'GET'])
+def crud_branches():
+    data={}
+    if request.method == 'POST':
+        conn = db_connection()
+        cursor = conn.cursor()
+        
+        if 'submit_add' in request.form:
+            branch_name = request.form.get('branch_name')
+            try:
+                data['add_branch']=cursor.execute("INSERT INTO branches (branch_name) VALUES (%s)", (branch_name,))
+                conn.commit()
+                data['message'] = "Branch added successfully!"
+            except pymysql.Error as e:
+                flash(f"An error occurred: {e}")
+                conn.rollback()
+                
+        elif 'submit_delete' in request.form:
+            branch_id = request.form.get('branch_id')
+            branch_name = request.form.get('branch_name')
+            try:
+                data['delete_branch']=cursor.execute("DELETE FROM branches WHERE branch_id = %s OR branch_name = %s", (branch_id, branch_name))
+                conn.commit()
+                data['message'] = "Branch deleted successfully!"
+            except pymysql.Error as e:
+                flash(f"An error occurred: {e}")
+                conn.rollback()
 
-def validate_password(password, stored_hash):
-    return check_password_hash(stored_hash, password)
+        elif 'submit_update' in request.form:  # Update a Branch
+            branch_id = request.form.get('branch_id')
+            branch_name = request.form.get('branch_name')
+            try:
+                data['update_branch']=cursor.execute("UPDATE branches SET branch_name = %s WHERE branch_id = %s", (branch_name, branch_id))
+                conn.commit()
+                data['message'] = "Branch updated successfully!"
+            except pymysql.Error as e:
+                flash(f"An error occurred: {e}")
+                conn.rollback()
+        else:
+            pass
+        cursor.close()
+        conn.close()
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    error = None
-    conn = None
-    try:
-        if request.method == 'POST':
-            email = request.form['email']
-            password = request.form['password']
-
-            if not email or not password:
-                error = "Please enter both email and password."
-                return render_template('login.html', error=error)
-
-            conn = db_connection()
-            with conn.cursor() as cursor:
-                cursor.execute('SELECT student_id, fname, email, password FROM student WHERE email = %s', (email,))
-                user = cursor.fetchone()
-
-            if user:
-                hashed_password = user['password']
-                ph = PasswordHasher()
-                try:
-                    ph.verify(hashed_password, password)
-                    session['user_id'] = user['student_id']
-                    session['username'] = user['email']
-                    session['fname'] = user['fname']
-                    return redirect(url_for('home'))
-                except Exception as e:
-                    error = "Invalid email or password."
-            else:
-                error = "User not found."
-
-    except Exception as e:
-        error = "An error occurred: {}".format(str(e))
-        traceback.print_exc()
-
-    finally:
-        if conn:
-            conn.close()
-    return render_template('login.html', error=error)
+    return render_template('crud_branches.html',data=data)
 
 @app.route('/about')
 @login_validation
@@ -405,7 +588,6 @@ def contact():
 def logout():
     session.clear()
     return redirect(url_for('login'))
-
 
 if __name__ == '__main__':
     app.run(debug=True)

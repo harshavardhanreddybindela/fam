@@ -71,8 +71,8 @@
 	<td><label for="branches">Branch:</label></td>
 	<td><select name="branch" id="branch">
 		<option value="">--select--</option>
-        {% for row in data['branchlist'] %}
-            <option value="{{ row['branch_id']}}">{{ row['branch_name'] }}</option>
+        {% for branch in data['branch_list'] %}
+            <option value="{{ branch['branch_id']}}">{{ branch['branch_name'] }}</option>
         {% endfor %}
     </select></td>
 </tr>
@@ -80,8 +80,8 @@
 	<td><label for="Qualification">Qualification:</label></td>
 	<td><select type="option" name="qualification" id="qualification">
 		<option value="">--select--</option>
-        {% for row in data['qualificationlist'] %}
-            <option value="{{ row['qualification_id']}}">{{ row['qualification'] }}</option>
+        {% for qualification in data['qualification_list'] %}
+            <option value="{{ qualification['qualification_id']}}">{{ qualification['qualification'] }}</option>
         {% endfor %}
     </select></td>
 </tr>
@@ -113,9 +113,9 @@
 	<td><label>Hobbies:</label></td>
 </tr>
 <tr>
-	{% for row in data['hobbies'] %}
+	{% for hobby in data['hobbies'] %}
 	<tr>
-		<td><input type="checkbox" id="hobby" name="hobbies[]" value="{{ row['hobbies_id']  }}">{{ row['hobby'] }}</input></td>
+		<td><input type="checkbox" id="hobby" name="hobbies[]" value="{{ hobby['hobbies_id']  }}">{{ hobby['hobby'] }}</input></td>
     </tr>
 	{% endfor %}
 </tr>

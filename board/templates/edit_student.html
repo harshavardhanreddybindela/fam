@@ -47,12 +47,10 @@
 <td>
   <select name="branch">
     <option value="">--select--</option>
-    {% for branch in data['branchlist'] %}
-        {% print(data['branchlist'])%}
-        <option value="{{ branch.branch_id }}" {% if branch.branch_id == student['branch_name'] %} selected {% endif %}>{{ branch.branch_name }}</option>
+    {% for branch in data['branch_list'] %}
+            <option value="{{ branch['branch_id']}}" {% if branch.branch_id == student['branch_name'] %} selected {% endif %}>{{ branch['branch_name'] }}</option>
     {% endfor %}
-</select>
-
+  </select>
 </td>
 </tr>
 
@@ -62,7 +60,7 @@
   <td>
     <select name="qualification">
       <option value="">--select--</option>
-      {% for qualification in data['qualificationlist'] %}
+      {% for qualification in data['qualification_list'] %}
         <option value="{{ qualification.qualification_id }}" {% if qualification.qualification_id == student['qualification'] %} selected {% endif %}>{{ qualification.qualification }}</option>
       {% endfor %}
     </select>
@@ -105,7 +103,7 @@
   <td><label>Hobbies:</label></td>
   <td>
     {% for hobby in data['all_hobbies'] %}
-    <input type="checkbox" name="hobbies[]" value="{{ hobby['hobbies_id'] }}" 
+    <input type="checkbox" name="hobbies[]" value="{{ hobby['hobbies_id'] }}"
         {% if hobby['hobbies_id']|string in data['selected_hobbies'] %} checked {% endif %}>
     <label>{{ hobby['hobby'] }}</label><br>
     {% endfor %}
