@@ -17,33 +17,38 @@ def post_student():
 
 def post_hobbies():
     insert_hobby_query = "INSERT INTO student_hobbies (student_id, hobbies_id) VALUES (%s, %s)"
-    
+    return insert_hobby_query
 def post_edit_hobbies():
     insert_hobbies_query = "INSERT INTO student_hobbies (student_id, hobbies_id) VALUES (%s, %s)"
     return insert_hobbies_query
 
 # student get operations
-def get_students(id=None, sort='student_id', order='asc', offset=0):
+def get_students(id=None, sort='student_id', order='asc', offset=0, limit=4):
     if id is None:
         student_list = """
-            SELECT s.student_id, fname, lname, email, phone, gender, dob, address, city, pincode, country, branch_name, qualification,
-            created_by, DATE(created_on) AS created_date, GROUP_CONCAT(h.hobby SEPARATOR ', ') AS hobbies_string
+            SELECT s.student_id, fname, lname, email, phone, gender, DATE_FORMAT(dob, '%%d-%%m-%%Y') AS dob,
+            address, city, pincode, country, branch_name, qualification,
+            created_by, DATE(created_on) AS created_date,
+            GROUP_CONCAT(h.hobby SEPARATOR ', ') AS hobbies_string
             FROM student s
-            LEFT JOIN student_hobbies sh ON (sh.student_id = s.student_id)
-            LEFT JOIN hobbies h ON (h.hobbies_id = sh.hobbies_id)
+            LEFT JOIN student_hobbies sh ON sh.student_id = s.student_id
+            LEFT JOIN hobbies h ON h.hobbies_id = sh.hobbies_id
             GROUP BY s.student_id
-            ORDER BY {} {} LIMIT 4 OFFSET %s""".format(sort, order)
+            ORDER BY {} {} LIMIT %s OFFSET %s""".format(sort,order)
+
     else:
         student_list ="""
-            SELECT s.student_id, fname, lname, email, phone, gender, dob, address, city, pincode, country, branch_name, qualification,
+            SELECT s.student_id, fname, lname, email, phone, gender, DATE_FORMAT(dob, '%%d-%%m-%%Y') AS dob, address, city, pincode, country, branch_name, qualification,
             created_by, DATE(created_on) AS created_date, GROUP_CONCAT(h.hobby SEPARATOR ', ') AS hobbies_string
             FROM student s
             JOIN student_hobbies sh ON s.student_id = sh.student_id
             WHERE s.student_id = %s
             GROUP BY s.student_id
-            ORDER BY {} {} LIMIT 4 OFFSET %s
+            ORDER BY {} {} LIMIT %s OFFSET %s
         """.format(sort, order)
     return student_list
+
+
 
 def get_student_details(cursor, student_id):
     query = "SELECT * FROM student WHERE student_id = %s"

@@ -65,6 +65,16 @@
         .submit_class:hover {
             background-color: #ff7f00;
         }
+        .error-message {
+            color: red;
+            font-weight: bold;
+            
+        }
+
+        .error {
+            border: 2px solid red;
+        }
+
         footer {
             background-color: #333;
             color: white;
@@ -73,22 +83,24 @@
             box-shadow: 0px -5px 10px rgba(0, 0, 0, 0.3);
         }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <div class="container">
-        {% if error%}
-            <p><strong>{{error}}</strong></p>
-        {% endif%}
+        {% if error %}
+            <span class="error-message">{{ error }}</span>
+        {% endif %}
         <header>
             <h1>Student - Login</h1>
         </header>
-            <form method="POST" action="/login" name="myform">
+            <form method="POST" action="{{ url_for('login') }}" name="myform">
                 <div class="form_div">
                     <label for="login_txt">Login:</label>
                     <input name="email" id="email" type="text" placeholder="Enter Email Id" autofocus>
                     <hr>
                     <label for="password_txt">Password:</label>
-                    <input id="pass" name="password" id="password" type="password" placeholder="Enter Password">
+                    <input name="password" id="password" type="password" class="error" placeholder="Enter Password">
+                    <span id="passwordMessage" class="error-message"></span>
                     <hr>
                     <button type="submit" class="submit_class" name="submit" id="submit">Login</button>
                 </div>
@@ -96,6 +108,35 @@
         
     </div>
 </body>
-<script>
-    
+<script type="text/javascript">
+    var pageReloaded = false;
+
+        // Function to reload the page once
+        function reloadOnce() {
+            if (!pageReloaded) {
+                location.reload(true); // true parameter forces a reload from the server, not from cache
+                pageReloaded = true;
+            }
+        }
+    $(document).ready(function(){
+        $("#submit").click(function(event) {
+            // Perform password validation
+            if (!validatePassword()) {
+                // Prevent form submission
+                event.preventDefault();
+                
+                // Apply error class to password input field
+                $("#password").addClass("error");
+            }
+        });
+    });
+
+    function validatePassword() {
+        return false; // Replace this with your actual password validation logic
+    }
+</script>
+
+
+
+
 </html>

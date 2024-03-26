@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
     <style>
         .search-table {
@@ -60,10 +61,53 @@
             font-weight: bold;
         }
     </style>
+    <script>
+        $(document).ready(function() {
+            var limit = 4;
+            var page = 1; // Initialize page to 1
+        
+            $('#loadmore').click(function() {
+                var offset = limit * page - limit; // Calculate offset for the new page
+        
+                $.ajax({
+                    url: '/list/page/' + (page + 1), // Pass current page to server
+                    method: 'GET',
+                    data: {
+                        offset: offset,
+                        page: page,
+                        is_ajax: true
+                    },
+                    success: function(response) {
+                        $('#student-table tbody').append(response); // Append response to table
+                        page++; // Increment page for the next request
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                    }
+                });
+            });
+        $("#search").on("keyup", function() {
+            var value = $(this).val().toLowerCase();
+            $("#student_details tr").filter(function() {
+                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+            });
+        });
+        });
+    </script>
 </head>
 <body>
     <h2 align="center">Student List</h2>
     {% include "menu.html" %}
+    <h1 align="middle">{{ message }}</h1>
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <ul>
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    {% endwith %}
     <form id="search-form" action="{{ url_for('list_students') }}" method="get">
         <input type="text" id="search" name="search" class="form-control" placeholder="Search here">
         <button type="submit" class="btn btn-primary">Search</button>
@@ -96,7 +140,7 @@
             <th>Download</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody id="student_details">
         {% for student in data['studentlist'] %}
         <tr>
             <td>{{student.student_id}}</td>
@@ -122,36 +166,15 @@
             </td>
         </tr>
         {% endfor %}
+    </tbody>
     </table>
-    <br>
     <navbar>
-        <a href="{{ url_for('list_students', page=prev_page) }}" class="btn btn-primary">Previous Page</a><br>
-        <a href="{{ url_for('list_students', page=next_page) }}" class="btn btn-primary">Next Page</a>
-        <a href="{{ url_for('list_students', page=page) }}" class="btn btn-primary" id="loadmore">Load More</a>
+        <!--<a href="{{ url_for('list_students', page=prev_page) }}" class="btn btn-primary">Previous Page</a><br>
+        <a href="{{ url_for('list_students', page=next_page) }}" class="btn btn-primary">Next Page</a> -->
+        <button class="btn btn-primary" id="loadmore">Load More</button>
     </navbar>
-    
-    </table>
-    <br>
-    <script>
-    $(document).ready(function() {
-        var offset = 0;
-        $('#loadmore').click(function() {
-            offset += 4; // Adjust based on how many records you load each time
-            $.ajax({
-                url: '/list',
-                method: 'GET',
-                data: {offset: offset},
-                success: function(response) {
-                    $('#student-table tbody').append(response);
-                    var numStudentsInResponse = $(response).filter('tr').length;
-                    if (numStudentsInResponse < 4) {
-                        $('#loadmore').hide();
-                    }
-                }
-            });
-        });
-    });
-</script>
 
-</tbody>
+    
+        
+</body>
 </html>

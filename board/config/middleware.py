@@ -9,3 +9,7 @@ def login_validation(f):
             return redirect(url_for('login',msg="User not logged in, redirecting to login page"))
         return f(*args, **kwargs)
     return check_session
+
+def clear_flash():
+    session.pop('_flashes', None)
+    return {}
