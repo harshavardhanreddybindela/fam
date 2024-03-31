@@ -39,7 +39,7 @@ app.permanent_session_lifetime = timedelta(minutes=60)
 
 # Establish a database connection
 conn = db_connection()
-
+conn.begin()
 # Mail configuration
 # These settings are necessary for Flask-Mail, allowing your app to send emails through a specified SMTP server
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -100,7 +100,7 @@ def parseCSV(filepath):
     col_names = ['branch_name']  # Define column names for parsing
     
     csvData = pd.read_csv(filepath, names=col_names, header=None)
-    inserted_branches = []  # To store information about newly inserted branches
+    insert_branches = []  # To store information about newly inserted branches
     
     try:
         for i, row in csvData.iterrows():
@@ -110,24 +110,22 @@ def parseCSV(filepath):
             cursor.execute("SELECT COUNT(*) FROM branches WHERE branch_name = %s", (branch_name,))
             result = cursor.fetchone()
             if result['COUNT(*)'] > 0:  # Branch exists
-                flash(f"Error: Branch '{branch_name}' already exists in the branch list at row {i+1}")
-            else:
-                # Insert the branch if it doesn't exist
+                flash(f"Error: Branch '{branch_name}' already exists in the branch list at row {i+1}, Remove the existing branches and insert CSV")
+                return
+            
+            insert_branches.append(branch_name)
+            for branch_name in insert_branches:
                 sql = "INSERT INTO branches (branch_name) VALUES (%s)"
-                value = (branch_name,)
-                cursor.execute(sql, value)
-                inserted_branches.append(branch_name)
+                cursor.execute(sql, (branch_name,))
         
-        # Commit the changes after processing all rows
-        conn.commit()
+            # Commit the transaction after successfully inserting all new branches
+            conn.commit()
         
-        if inserted_branches:
-            flash(f"The following branches were inserted: {', '.join(inserted_branches)}")
+        if insert_branches:
+            flash(f"The following branches were inserted: {', '.join(insert_branches)}")
     except Exception as e:
         flash(f"Error: {e}")
-        flash(f"Error occurred: {e}")
         conn.rollback()
-
         
 @app.before_request
 def before_request():
@@ -143,7 +141,6 @@ def add_student():
         cursor.execute("SELECT branch_id, branch_name FROM branches ORDER BY branch_id ASC")
         data['branch_list'] = cursor.fetchall()
         
-        
         cursor.execute("SELECT qualification_id, qualification FROM qualifications ORDER BY qualification_id ASC")
         data['qualification_list'] = cursor.fetchall()
         
@@ -157,11 +154,20 @@ def add_student():
 @app.route('/crud_branches', methods=['POST', 'GET'])
 def crud_branches():
     data={}
+    conn = db_connection()
+    cursor = conn.cursor()
+    with cursor:
+            data['branch_list'] = get_branch_list(cursor)
     if request.method == 'POST':
-        conn = db_connection()
-        cursor = conn.cursor()
-        
-        if 'submit_add' in request.form:
+        if 'files' in request.files:
+            uploaded_file = request.files['files']
+            if uploaded_file.filename != '':
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], uploaded_file.filename)
+                uploaded_file.save(file_path)
+                parseCSV(file_path)
+                flash('File uploaded and processed successfully')
+                conn.rollback()
+        elif 'submit_add' in request.form:
             branch_name = request.form.get('branch_name')
             try:
                 data['add_branch']=cursor.execute("INSERT INTO branches (branch_name) VALUES (%s)", (branch_name,))
@@ -193,7 +199,7 @@ def crud_branches():
                 flash(f"An error occurred: {e}")
                 conn.rollback()
         else:
-            pass
+            flash("Nothing is updated in branches")
         cursor.close()
         conn.close()
 
@@ -323,6 +329,7 @@ def list_students(page):
             conn.close()
 
 
+
 # Define a route for deleting a student
 @app.route('/delete/<int:id>', methods=['GET'])
 @login_validation
@@ -346,22 +353,24 @@ def delete_student(id):
 @login_validation
 def edit_student(id):
     conn = db_connection()
-    cursor=conn.cursor()
+    cursor = conn.cursor(pymysql.cursors.DictCursor)
     try:
-        print("Entering Edit")
-        data={}
-        with conn.cursor(pymysql.cursors.DictCursor) as cursor:
+        data = {}
+        with cursor:
             data['all_hobbies'] = get_hobbies_list(cursor)
-            data['selected_hobbies'] = get_student_hobbies(cursor, id)
+            selected_hobbies = get_student_hobbies(cursor, id)
+            data['selected_hobbies'] = selected_hobbies.split('|') if selected_hobbies else []
             data['branch_list'] = get_branch_list(cursor)
             data['qualification_list'] = get_qualification_list(cursor)
             student = get_student_details(cursor, id)
-            if not student:
-                return "Student not found", 404
-            return render_template('edit_student.html',student=student, data=data)
+
+            return render_template('edit_student.html', student=student, data=data)
     except Exception as e:
-        return "Error fetching data",e
-    
+        return "Error fetching data: " + str(e), 500
+    finally:
+        conn.close()
+
+
 # Define a route for updating a student's information
 @app.route('/update_student/<int:id>', methods=['POST'])
 def update_student(id):
@@ -384,7 +393,6 @@ def update_student(id):
 
         conn = None
         try:
-            print("Entering Update")
             data={}
             conn = db_connection()
             with conn.cursor() as cursor:
@@ -472,8 +480,8 @@ def download_pdf(id):
         
         col_widths = {
             'Name': page_width * 0.3,
-            'Email': page_width * 0.4,
-            'Phone': page_width * 0.3
+            'Email': page_width * 0.5,
+            'Phone': page_width * 0.2
         }
         
         # Header
@@ -567,7 +575,7 @@ def login():
 
             conn = db_connection()
             cursor = conn.cursor()
-            cursor.execute('SELECT student_id, fname, email, password FROM student WHERE email = %s', (email,))
+            cursor.execute('SELECT student_id, fname, email, password,is_admin FROM student WHERE email = %s', (email,))
             user = cursor.fetchone()
 
             if user:
@@ -578,6 +586,7 @@ def login():
                     session['user_id'] = user['student_id']
                     session['username'] = user['email']
                     session['fname'] = user['fname']
+                    session['is_admin'] = user['is_admin']
                     return redirect(url_for('home'))
                 except Exception as e:
                     error = "Invalid email or password."

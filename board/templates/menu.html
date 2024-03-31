@@ -1,38 +1,58 @@
 <html>
 <head>
 <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-<link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+
     <nav align="right">
         <a href="/logout" class="btn btn-danger" align="right">
             <span class="glyphicon glyphicon-danger"></span> logout
         </a>
     </nav>
     <nav align="center">
-    <ul>
-        <a href="/home" class="btn btn-primary">
-        <span class="glyphicon glyphicon-home"></span> Home
-        </a>
-        <a href="/add_student" class="btn btn-primary">
-        <span class="glyphicon glyphicon-plus"></span> Register Form
-        </a>
-        <a href="/list" class="btn btn-primary">
-        <span class="glyphicon glyphicon-list"></span> Student List
-        </a>
-        <a href="/about" class="btn btn-primary">
-        <span class="glyphicon glyphicon-exclamation-sign"></span> About
-        </a>
-        <a href="/contact" class="btn btn-primary">
-        <span class="glyphicon glyphicon-envelope"></span> Contact
-        </a>
-
-        <a href="{{ url_for('crud_branches') }}" class="btn btn-primary">
-            <span class="glyphicon glyphicon-plus"></span> Add | Delete Branches
-        </a>
-
-        <a href="{{ url_for('export_csv') }}" class="btn btn-success">
-            <span class="glyphicon glyphicon-export"></span> Export to CSV
-        </a>
-
+        <ul>
+            <a href="/home" class="btn btn-primary">
+                <span class="glyphicon glyphicon-home"></span> Home
+            </a>
+            
+            {% if session.get('is_admin') %}
+            <!-- Admin-exclusive links -->
+            <a href="/add_student" class="btn btn-primary">
+                <span class="glyphicon glyphicon-plus"></span> Register Form
+            </a>
+            <a href="/list" class="btn btn-primary">
+                <span class="glyphicon glyphicon-list"></span> Student List
+            </a>
+            <a href="{{ url_for('crud_branches') }}" class="btn btn-primary">
+                <span class="glyphicon glyphicon-plus"></span> Add | Delete Branches
+            </a>
+            <a href="{{ url_for('export_csv') }}" class="btn btn-success">
+                <span class="glyphicon glyphicon-export"></span> Export to CSV
+            </a>
+            {% else %}
+                {% if session.get('user_id') %}
+                    <a href="{{ url_for('edit_student', id=session.get('user_id')) }}" class="btn btn-primary">
+                        <span class="glyphicon glyphicon-user"></span> Edit Profile
+                    </a>
+                {% endif %}
+            {%endif%}
+            
+            <a href="/about" class="btn btn-primary">
+                <span class="glyphicon glyphicon-exclamation-sign"></span> About
+            </a>
+            <a href="/contact" class="btn btn-primary">
+                <span class="glyphicon glyphicon-envelope"></span> Contact
+            </a>
+        </ul>
     </nav>
-</head>
+    
+<body>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+</body>
 </html>
