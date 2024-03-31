@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"></link>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css"></link>
 	<link type="text/javascript" href="validation.js"></link>
-  <style>
+<style>
     .glyphicon {
 		position: relative;
 		top: 1px;
@@ -37,15 +37,7 @@
 </style>
 {% include("menu.html") %}
 <h1 align="middle">{{ message }}</h1>
-{% with messages = get_flashed_messages() %}
-{% if messages %}
-	<ul>
-	{% for message in messages %}
-		<li>{{ message }}</li>
-	{% endfor %}
-	</ul>
-{% endif %}
-{% endwith %}
+
 <h1 align="middle">Student Register Form</h1>
 <form method="POST" action="/register" name="myform" onsubmit="return validateForm()" enctype="multipart/form-data">
 <fieldset>
@@ -100,7 +92,7 @@
 </tr>
 <tr>
 	<td><label for="datepicker">Birthday:</label></td>
-	<td><input type="date" id="dob" name="dob"></td>
+	<td><input type="text" id="dob" name="dob"></td>
 </tr>
 <tr>
 	<td><label for="address">Address:</label></td>
