@@ -27,13 +27,11 @@ function validateForm() {
   }
 
   var e = document.getElementById("qualification");
-var strUser = e.options[e.selectedIndex].value;
-if (strUser === "select") {
-    alert("Please select your qualification");
-    return false;
-}
-
-
+  var strUser = e.options[e.selectedIndex].value;
+  if (strUser === "select") {
+      alert("Please select your qualification");
+      return false;
+  }
   if ( ( myform.gender[0].checked == false ) && ( myform.gender[1].checked == false ) )
   {
     alert ( "Please choose your Gender: Male or Female" );
@@ -65,7 +63,7 @@ if (strUser === "select") {
     return false;
   }
   var hobbies = document.getElementsByName("hobbies[]");
-    var hobbyChecked = false;
+  var hobbyChecked = false;
     for (let i = 0; i < hobbies.length; i++) {
         if (hobbies[i].checked) {
             hobbyChecked = true;
@@ -76,5 +74,24 @@ if (strUser === "select") {
         alert("Please check at least one of your hobbies");
         return false;
     }
-    return true;
+
+  // Password validation
+  var passwordInput = document.getElementById("password");
+  var password = passwordInput.value.trim(); // Trim leading and trailing spaces
+
+  // Check if password is empty
+  if (password === "") {
+      alert("Please enter a password.");
+      return false;
+  }
+
+  // Check if password meets the required criteria
+  var passwordPattern = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
+  if (!passwordPattern.test(password)) {
+      alert("Password must contain at least one digit, one lowercase letter, one uppercase letter, and be at least 8 characters long.");
+      return false;
+  }
+
+  // All validations passed, return true to allow form submission
+  return true;
 }
