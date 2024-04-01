@@ -10,7 +10,7 @@ from functools import wraps
 
 # Third-party library imports
 from argon2 import PasswordHasher, verify_password
-from argon2.exceptions import InvalidHashError
+from argon2.exceptions import InvalidHash
 from fpdf import FPDF
 import pandas as pd
 from flask import Flask, jsonify, redirect, render_template, request, Response, session, url_for,flash
@@ -209,11 +209,14 @@ def crud_branches():
 @app.route('/register', methods=['POST'])
 def register():
     error = None
-    conn = None
+    data = {}
+    student_info = {}
+
     try:
         if request.method == 'POST':
+            # Handle form submission and data processing
+
             # Extract student info from form data
-            student_info = {}
             student_info['profile'] = request.files['profile']
             student_info['fname'] = request.form['fname']
             student_info['lname'] = request.form['lname']
@@ -236,35 +239,52 @@ def register():
             # Store hashed password in the database
             conn = db_connection()
             with conn.cursor() as cursor:
-                data = {}
                 insert_student_query = post_student()
-                data['add_student'] = cursor.execute(insert_student_query, (student_info['profile'], student_info['fname'], student_info['lname'], student_info['email'], student_info['phone'], student_info['gender'], student_info['dob'], student_info['address'], student_info['city'], student_info['pincode'], student_info['country'], student_info['branch'], student_info['qualification'], hashed_password))  # Insert hashed password
+                cursor.execute(insert_student_query, (student_info['profile'], student_info['fname'], student_info['lname'], student_info['email'], student_info['phone'], student_info['gender'], student_info['dob'], student_info['address'], student_info['city'], student_info['pincode'], student_info['country'], student_info['branch'], student_info['qualification'], hashed_password))  # Insert hashed password
                 student_id = cursor.lastrowid
                 for hobby_id in student_info['hobbies'].split('|'):
                     insert_hobby_query = post_hobbies()
-                    data['post_hobbies'] = cursor.execute(insert_hobby_query, (student_id, hobby_id))
+                    cursor.execute(insert_hobby_query, (student_id, hobby_id))
                 conn.commit()
-                email = student_info['email']
-                fname = student_info['fname']
-                msg = Message('Thank You for Your Submission',
-                            sender='harshareddy4400@gmail.com',
-                            recipients=[email])
-                msg.body = """
-                Hello {}!,
-                    Thank you for your submission. You are registered as a student in our website \t
-                Thanks and Regards,
-                Harsha
-                Note:this is a test run by Harsha Reddy""".format(fname)
-                mail.send(msg)
+
+                # Flash a success message
+                flash('Student registered successfully!', 'success')
+                # Redirect to the add_student page to clear the form fields
+                return redirect(url_for('add_student'))
+
     except Exception as e:
         error = "An error occurred: {}".format(str(e))
         # Log the error for further investigation
         traceback.print_exc()  # Print the full traceback
 
     finally:
-        if not conn:
+        if 'conn' in locals():
             conn.close()
+
+    # If an error occurred or the form submission failed, render the add_student page with the error message and form data
+    data['error'] = error
+    data['student_info'] = student_info
+
+    # Retrieve data for populating form fields
+    conn = db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT branch_id, branch_name FROM branches ORDER BY branch_id ASC")
+        data['branch_list'] = cursor.fetchall()
+
+        cursor.execute("SELECT qualification_id, qualification FROM qualifications ORDER BY qualification_id ASC")
+        data['qualification_list'] = cursor.fetchall()
+
+        cursor.execute("SELECT hobbies_id, hobby FROM hobbies ORDER BY hobbies_id ASC")
+        data['hobbies'] = cursor.fetchall()
+
+    except Exception as e:
+        flash("Error fetching data: {}".format(e), 'danger')
+    finally:
+        cursor.close()
+        conn.close()
     return render_template('add_student.html', data=data,student_info=student_info,error=error)
+
 
 @app.route('/list/', defaults={'page': 1}, methods=['GET', 'POST'])
 @app.route('/list/page/<int:page>', methods=['GET', 'POST'])
