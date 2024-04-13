@@ -4,6 +4,7 @@
     <title>Student  - Login</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <h1 align="middle">{{ message }}</h1>
     <style>
         body {
             margin: 0;
@@ -106,38 +107,8 @@
                     <button type="submit" class="submit_class" name="submit" id="submit">Login</button>
                 </div>
             </form>
-        
+            <a href="{{ url_for('signup') }}" class="btn btn-pencil">Signup</a>
+
     </div>
 </body>
-<script type="text/javascript">
-    var pageReloaded = false;
-
-        // Function to reload the page once
-        function reloadOnce() {
-            if (!pageReloaded) {
-                location.reload(true); // true parameter forces a reload from the server, not from cache
-                pageReloaded = true;
-            }
-        }
-    $(document).ready(function(){
-        $("#submit").click(function(event) {
-            // Perform password validation
-            if (!validatePassword()) {
-                // Prevent form submission
-                event.preventDefault();
-                
-                // Apply error class to password input field
-                $("#password").addClass("error");
-            }
-        });
-    });
-
-    function validatePassword() {
-        return false; // Replace this with your actual password validation logic
-    }
-</script>
-
-
-
-
 </html>

@@ -65,16 +65,6 @@
 <body>
     <h2 align="center">Student List</h2>
     {% include "menu.html" %}
-    <h1 align="middle">{{ message }}</h1>
-    {% with messages = get_flashed_messages() %}
-    {% if messages %}
-        <ul>
-        {% for message in messages %}
-            <li>{{ message }}</li>
-        {% endfor %}
-        </ul>
-    {% endif %}
-    {% endwith %}
     <form id="search-form" action="{{ url_for('list_students') }}" method="get">
         <input type="text" id="search" name="search" class="form-control" placeholder="Search here">
         <button type="submit" class="btn btn-primary">Search</button>
@@ -98,9 +88,10 @@
             <th>Qualification</th>
             <th>DOB</th>
             <th>Address</th>
-            <th>City</th>
             <th>Pincode</th>
             <th>Country</th>
+            <th>State</th>
+            <th>City</th>
             <th>Hobbies</th>
             <th>Created on</th>
             <th>Action</th>
@@ -119,13 +110,14 @@
             <td>{{ student.qualification }}</td>
             <td>{{ student.dob }}</td>
             <td>{{ student.address }}</td>
+            <td>{{ student.country }}</td>
+            <td>{{ student.state }}</td>
             <td>{{ student.city }}</td>
             <td>{{ student.pincode }}</td>
-            <td>{{ student.country }}</td>
             <td>{{ student.hobbies_string }}</td>
             <td>{{ student.created_date }}</td>
             <td>
-                <a href="{{ url_for('delete_student', id=student.student_id) }}" class="btn btn-danger" onclick="return confirm('Are you sure?')">Delete</a>
+                <a href="{{ url_for('delete_student', id=student.student_id) }}" class="btn btn-danger">Delete</a>
                 <a href="{{ url_for('edit_student', id=student.student_id) }}" class="btn btn-pencil">Edit</a>
             </td>
             <td>
@@ -138,10 +130,8 @@
         $(document).ready(function() {
             var limit = 4;
             var page = 1; // Initialize page to 1
-        
             function loadMoreItems() {
                 var offset = limit * page - limit; // Calculate offset for the new page
-        
                 $.ajax({
                     url: '/list/page/' + (page + 1), // Pass current page to server
                     method: 'GET',

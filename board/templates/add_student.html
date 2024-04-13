@@ -5,6 +5,7 @@
 	<title>Student Register Form</title>
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"></link>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css"></link>
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 	<script src="static/validation.js"></script>
 <style>
     .glyphicon {
@@ -36,7 +37,6 @@
     )}
 </style>
 {% include("menu.html") %}
-<h1 align="middle">{{ message }}</h1>
 
 <h1 align="middle">Student Register Form</h1>
 <form method="POST" action="/register" name="myform" onsubmit="return validateForm()" enctype="multipart/form-data">
@@ -92,15 +92,11 @@
 </tr>
 <tr>
 	<td><label for="datepicker">Birthday:</label></td>
-	<td><input type="text" id="dob" name="dob"></td>
+	<td><input type="date" id="dob" name="dob"></td>
 </tr>
 <tr>
 	<td><label for="address">Address:</label></td>
 	<td><textarea type="text" name="address"></textarea></td>
-</tr>
-<tr>
-	<td><label for="city">City:</label></td>
-	<td><input type="text" id="city" name="city"></td>
 </tr>
 <tr>
 	<td><label for="pincode">Pincode:</label></td>
@@ -108,9 +104,26 @@
 </tr>
 <tr>
 	<td><label for="country">Country:</label></td>
-	<td><input type="text" id="country" name="country"></td>
+	<td><select id="country" name="country">
+		<option value="">--select--</option>
+        {% for country in data['country_list'] %}
+            <option value="{{ country['country_id']}}">{{ country['country_name'] }}</option>
+        {% endfor %}
+    </select></td>
 </tr>
 <tr>
+	<td><label for="state">State:</label></td>
+	<td><select id="state" name="state">
+		<option value="">--select--</option>
+    </select></td>
+</tr>
+<tr>
+	<td><label for="city">City:</label></td>
+	<td><select id="city" name="city">
+        <option value="">--select--</option>
+    </select></td>
+</tr>
+
 	<td><label>Hobbies:</label></td>
 </tr>
 <tr>
@@ -120,10 +133,7 @@
     </tr>
 	{% endfor %}
 </tr>
-<tr>
-	<td><label for="password">Password:</label></td>
-	<td><input type="password" id="password" name="password"></td>
-</tr>
+
 <tr>
 	<td>
 	<button class="btn btn-success" type="submit" class="form-control form-control-lg" id="submit">Register</button>
@@ -172,9 +182,7 @@
 			yearRange: "1947:" + today.getFullYear()
 		});
 	});
-	
-</script>
-<script type="text/javascript">
+
 	$(document).ready(function() {
 	$("#email").on('blur', (event) => {
 	$('#emailMsg').hide();
@@ -195,7 +203,37 @@
 	});
 	});
 	});
+	$(document).ready(function() {
+		$('#country').change(function() {
+			var countryId = $(this).val();
+			$.ajax({
+				url: '/states_by_country/' + countryId,
+				type: 'GET',
+				success: function(data) {
+					$('#state').empty().append('<option value="">--select--</option>');
+					$.each(data, function(index, state) {
+						$('#state').append(new Option(state.state_name, state.state_id));
+					});
+				}
+			});
+		});
+
+		$('#state').change(function() {
+			var stateId = $(this).val();
+			$.ajax({
+				url: '/cities_by_state/' + stateId,
+				type: 'GET',
+				success: function(data) {
+					$('#city').empty().append('<option value="">--select--</option>');
+					$.each(data, function(index, city) {
+						$('#city').append(new Option(city.city_name, city.city_id));
+					});
+				}
+			});
+		});
+	});
 </script>
+
 </head>
 </body>
 </html>

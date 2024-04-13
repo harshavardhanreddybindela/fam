@@ -10,8 +10,8 @@ def db_connection():
 
 # post operations
 def post_student():
-    insert_student_query = """INSERT INTO student (profile,fname, lname, email, phone, gender, dob, address, city, pincode, country, branch_name, qualification,password)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s)"""
+    insert_student_query = """INSERT INTO student (profile,fname, lname, email, phone, gender, dob, address, city, pincode, country, state, branch_name, qualification,password)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s)"""
     return insert_student_query
 
 def post_hobbies():
@@ -24,7 +24,7 @@ def post_edit_hobbies():
 def get_students(sort='student_id', order='asc', offset=0, limit=4, search=None):
     base_query = """
     SELECT s.student_id, s.fname, s.lname, s.email, s.phone, s.gender, DATE_FORMAT(s.dob, '%%d-%%m-%%Y') AS dob, s.address,
-    s.city, s.pincode, s.country, s.branch_name, s.qualification,s.created_by, DATE(s.created_on) AS created_date,
+    s.city, s.pincode, s.country,s.state,s.city, s.branch_name, s.qualification,s.created_by, DATE(s.created_on) AS created_date,
     GROUP_CONCAT(h.hobby SEPARATOR ', ') AS hobbies_string FROM student s
     LEFT JOIN student_hobbies sh ON sh.student_id = s.student_id
     LEFT JOIN hobbies h ON h.hobbies_id = sh.hobbies_id
@@ -55,8 +55,8 @@ def get_student_details(cursor, student_id):
     return result if result else {}
 
 
-def get_student_email(cursor, email):
-    cursor.execute("SELECT student_id, fname, email FROM student WHERE email = %s", (email,))
+def get_student_email(cursor, student_id):
+    cursor.execute("SELECT student_id,email FROM student WHERE student_id = %s", (student_id,))
     student_info = cursor.fetchall()
     return student_info
 
@@ -93,6 +93,21 @@ def get_email(id):
 def get_hobbies_list(cursor):
     get_hobbies_query = "SELECT hobbies_id, hobby FROM hobbies ORDER BY hobby ASC"
     cursor.execute(get_hobbies_query)
+    return cursor.fetchall()
+
+def get_cities_list(cursor):
+    get_cities_query = "SELECT city_id, city_name FROM cities ORDER BY city_name ASC"
+    cursor.execute(get_cities_query)
+    return cursor.fetchall()
+
+def get_states_list(cursor):
+    get_states_query = "SELECT state_id, state_name FROM states ORDER BY state_name ASC"
+    cursor.execute(get_states_query)
+    return cursor.fetchall()
+
+def get_countries_list(cursor):
+    get_countries_query = "SELECT country_id, country_name FROM countries ORDER BY country_name ASC"
+    cursor.execute(get_countries_query)
     return cursor.fetchall()
 
 def get_branch_list(cursor):
