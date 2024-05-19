@@ -1,0 +1,190 @@
+<html>
+<body bgcolor="#ffffe5">
+  {% include("menu.html") %}
+
+<head>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"></script>
+  <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jqBootstrapValidation/1.3.6/jqBootstrapValidation.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  
+  </head>
+<h1 align="middle">Student Register Form</h1>
+
+<form method="post" action="{{ url_for('update_student', id=student.student_id) }}" name="myform" onsubmit="return validateForm()">
+<input type="hidden" id="id" name="id" value="{{ student['student_id'] }}">
+<fieldset>
+  <legend>Edit your details below</legend>
+<table>
+  <tr>
+    <td><label for="profile">Profile Picture:</label></td>
+    <td>
+        <input type="file" id="profile" name="profile" value=" {{student['profile']}} ">
+    </td>
+  </tr>
+<tr>
+  <td><label for="fname">First name:</label></td>
+  <td><input type="text" id="fname" name="fname" value=" {{ student['fname'] }} "></td>
+</tr>
+<tr>
+  <td><label for="lname">Last name:</label></td>
+  <td><input type="text" id="lname" name="lname" value="{{ student['lname'] }}"></td>
+</tr>
+<tr>
+  <td><label for="email">Email:</label></td>
+  <td><input type="email" id="email" name="email" value="{{ student['email'] }}"></td>
+</tr>
+
+<tr>
+  <td><label for="phone">Phone No.:</label></td>
+  <td><input type="tel" id="phone" name="phone" value="{{ student['phone'] }}"></td>
+</tr>
+<tr>
+<td>
+<label for="branches">Branch:</label>
+<td>
+  <select name="branch">
+    <option value="">--select--</option>
+    {% for branch in data['branch_list'] %}
+            <option value="{{ branch['branch_id']}}" {% if branch.branch_id == student['branch_name'] %} selected {% endif %}>{{ branch['branch_name'] }}</option>
+    {% endfor %}
+  </select>
+</td>
+</tr>
+
+<tr>
+<td>
+<label for="qualification">Qualification:</label>
+  <td>
+    <select name="qualification">
+      <option value="">--select--</option>
+      {% for qualification in data['qualification_list'] %}
+        <option value="{{ qualification.qualification_id }}" {% if qualification.qualification_id == student['qualification'] %} selected {% endif %}>{{ qualification.qualification }}</option>
+      {% endfor %}
+    </select>
+  </td>
+</tr>
+<tr>
+  <td><label for="gender">Gender:</label></td>
+  <td>
+    <input type='radio' name='gender' value='male' {% if student.gender != "female" %}checked{% endif %}>Male
+    <input type="radio" name="gender" value='female' {% if student.gender == "female" %}checked{% endif %}>Female
+  </td>
+</tr>
+<tr>
+	<td><label for="datepicker">Birthday:</label></td>
+	<td><input type="date" id="dob" name="dob" value="{{ student['dob'] }}"></td>
+</tr>
+
+<tr>
+  <td><label for="address">Address:</label></td>
+  <td>
+    <textarea id="address" name="address" >{{ student['address'] }}</textarea>
+  </td>
+</tr>
+
+
+
+<tr>
+  <td><label for="pincode">Pincode:</label></td>
+  <td><input type="text" id="pincode" name="pincode" value="{{ student['pincode'] }}"></td>
+</tr>
+<tr>
+  <td><label for="country">Country:</label></td>
+  <td>
+      <select name="country">
+          <option value="">--select--</option>
+          {% for country in data['country_list'] %}
+              <option value="{{ country['country_id'] }}" {% if country.country_id == student['country'] %}selected{% endif %}>{{ country['country_name'] }}</option>
+          {% endfor %}
+      </select>
+  </td>
+</tr>
+<tr>
+  <td><label for="state">State:</label></td>
+  <td>
+    <select name="state" id="state">
+      <option value="">--select--</option>
+      {% for state in data['state_list'] %}
+              <option value="{{ state['state_id']}}" {% if state.state_id == student['state'] %} selected {% endif %}>{{ state['state_name'] }}</option>
+      {% endfor %}
+    </select>
+  </td>
+</tr>
+<tr>
+  <td><label for="city">City:</label></td>
+  <td>
+    <select name="city" id="city">
+      <option value="">--select--</option>
+      {% for city in data['city_list'] %}
+              <option value="{{ city['city_id']}}" {% if city.city_id == student['city'] %} selected {% endif %}>{{ city['city_name'] }}</option>
+      {% endfor %}
+    </select>
+  </td>
+</tr>
+<tr>
+  <td><label>Hobbies:</label></td>
+  <td>
+    {% for hobby in data['all_hobbies'] %}
+    <input type="checkbox" name="hobbies[]" value="{{ hobby['hobbies_id'] }}"
+        {% if hobby['hobbies_id']|string in data['selected_hobbies'] %} checked {% endif %}>
+    <label>{{ hobby['hobby'] }}</label><br>
+    {% endfor %}
+  </td>
+</tr>
+
+<tr align="middle">
+	<td><input type="submit" value="Submit" name="submit" class="btn btn-success" class="form-control form-control-lg" ></td>
+</tr>
+  
+</table>
+</fieldset>
+</form>
+<script>
+  $(function() {
+    var today = new Date();
+    $("#dob").datepicker({
+        dateFormat: "dd/mm/yy",
+        minDate: new Date(1947, 0, 1),
+        maxDate: today,
+        changeYear: true,
+        changeMonth: true,
+        yearRange: "1947:" + today.getFullYear()
+    });
+  });
+
+  $(document).ready(function() {
+    // Country selection change event
+    $('#country').change(function() {
+        var countryId = $(this).val();
+        $.ajax({
+            url: '/states_by_country/' + countryId,
+            type: 'GET',
+            success: function(data) {
+                $('#state').empty().append('<option value="">--select--</option>');
+                $.each(data, function(index, state) {
+                    $('#state').append(new Option(state.state_name, state.state_id));
+                });
+            }
+        });
+    });
+
+    // State selection change event
+    $('#state').change(function() {
+        var stateId = $(this).val();
+        $.ajax({
+            url: '/cities_by_state/' + stateId,
+            type: 'GET',
+            success: function(data) {
+                $('#city').empty().append('<option value="">--select--</option>');
+                $.each(data, function(index, city) {
+                    $('#city').append(new Option(city.city_name, city.city_id));
+                });
+            }
+        });
+    });
+});
+</script>
+</body>
+</html>

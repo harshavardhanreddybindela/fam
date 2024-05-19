@@ -1,0 +1,28 @@
+
+    {% for student in data['studentlist'] %}
+    <tr>
+        <td>{{ student.student_id }}</td>
+        <td>{{ student.fname }}</td>
+        <td>{{ student.lname }}</td>
+        <td>{{ student.email }}</td>
+        <td>{{ student.phone }}</td>
+        <td>{{ student.branch_name }}</td>
+        <td>{{ student.qualification }}</td>
+        <td>{{ student.dob }}</td>
+        <td>{{ student.address }}</td>
+        <td>{{ student.country }}</td>
+        <td>{{ student.state }}</td>
+        <td>{{ student.city }}</td>
+        <td>{{ student.pincode }}</td>
+        <td>{{ student.hobbies_string }}</td>
+        <td>{{ student.created_date }}</td>
+        <td>
+            <a href="{{ url_for('delete_student', id=student.student_id) }}" class="btn btn-danger" onclick="return confirm('Are you sure?')">Delete</a>
+            <a href="{{ url_for('edit_student', id=student.student_id) }}" class="btn btn-pencil">Edit</a>
+        </td>
+        <td>
+            <a href="{{ url_for('download_pdf', id=student.student_id) }}" class="btn btn-pencil">Download PDF</a>
+        </td>
+    </tr>
+    {% endfor %}
+
