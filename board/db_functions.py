@@ -6,12 +6,13 @@ from config.db import DATABASE_CONFIG
 
 def db_connection():
     conn = pymysql.connect(**DATABASE_CONFIG)
+    print(conn)
     return conn
 
 # post operations
 def post_student():
-    insert_student_query = """INSERT INTO student (profile,fname, lname, email, phone, gender, dob, address, city, pincode, country, state, branch_name, qualification,password)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s)"""
+    insert_student_query = """INSERT INTO student (profile,fname, lname, email, phone, gender, dob, address, city, pincode, country, state, branch_name, qualification)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s)"""
     return insert_student_query
 
 def post_hobbies():

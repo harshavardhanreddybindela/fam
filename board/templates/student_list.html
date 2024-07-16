@@ -1,174 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Student List</title>
-    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <link
+      rel="stylesheet"
+      href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+    />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css"
+      rel="stylesheet"
+      id="bootstrap-css"
+    />
+    <link rel="stylesheet" href="../static/style.css" />
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
-    <style>
-        .search-table {
-            padding: 5%;
-            margin-top: -1%;
-        }
-        .search-box {
-            background: #c1c1c1;
-            border: 1px solid #ababab;
-            padding: 1%;
-        }
-        .search-box input:focus {
-            box-shadow: none;
-            border: 2px solid #eeeeee;
-        }
-        .search-list {
-            background: #fff;
-            border: 1px solid #ababab;
-            border-top: none;
-        }
-        .search-list h3 {
-            background: #eee;
-            padding: 3%;
-            color: #fe6f41;
-            margin-bottom: 0%;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        table, th, td {
-            border: 1px solid black;
-        }
-        th, td {
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        .btn-primary {
-            color: #fff;
-            background-color: #337ab7;
-            border-color: #2e6da4;
-        }
-        .btn-pencil {
-            color: #fff;
-            background-color: #337ab7;
-            border-color: #2e6da4;
-        }
-        .sort-active {
-            font-weight: bold;
-        }
-    </style>
-</head>
-<body>
-    <h2 align="center">Student List</h2>
-    {% include "menu.html" %}
+  </head>
+  <body>
+    <header>
+      <h1 align="center">Student List</h1>
+      {% include("menu.html") %}
+    </header>
+
     <form id="search-form" action="{{ url_for('list_students') }}" method="get">
-        <input type="text" id="search" name="search" class="form-control" placeholder="Search here">
-        <button type="submit" class="btn btn-primary">Search</button>
+      <input
+        type="text"
+        id="search"
+        name="search"
+        class="form-control"
+        placeholder="Search here"
+      />
+      <button type="submit" class="btn btn-primary">Search</button>
     </form>
 
     <table id="student-table" class="table">
-    <thead>
+      <thead>
         <tr>
-            <th>
-                <a href="{{ url_for('list_students', sort='student_id', current_sort=sort, current_order=order, page=page) }}">Student ID</a>
-            </th>
-            <th>
-                <a href="{{ url_for('list_students', sort='fname', current_sort=sort, current_order=order, page=page) }}">First Name</a>
-            </th>
-            <th>
-                <a href="{{ url_for('list_students', sort='lname', current_sort=sort, current_order=order, page=page) }}">Last Name</a>
-            </th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Branch</th>
-            <th>Qualification</th>
-            <th>DOB</th>
-            <th>Address</th>
-            <th>Pincode</th>
-            <th>Country</th>
-            <th>State</th>
-            <th>City</th>
-            <th>Hobbies</th>
-            <th>Created on</th>
-            <th>Action</th>
-            <th>Download</th>
+          <th>
+            <a
+              href="{{ url_for('list_students', sort='student_id', current_sort=sort, current_order=order, page=page) }}"
+              >Student ID</a
+            >
+          </th>
+          <th>
+            <a
+              href="{{ url_for('list_students', sort='fname', current_sort=sort, current_order=order, page=page) }}"
+              >First Name</a
+            >
+          </th>
+          <th>
+            <a
+              href="{{ url_for('list_students', sort='lname', current_sort=sort, current_order=order, page=page) }}"
+              >Last Name</a
+            >
+          </th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Branch</th>
+          <th>Qualification</th>
+          <th>DOB</th>
+          <th>Address</th>
+          <th>Pincode</th>
+          <th>Country</th>
+          <th>State</th>
+          <th>City</th>
+          <th>Hobbies</th>
+          <th>Created on</th>
+          <th>Action</th>
+          <th>Download</th>
         </tr>
-    </thead>
-    <tbody id="student_details">
+      </thead>
+      <tbody id="student_details">
         {% for student in data['studentlist'] %}
         <tr>
-            <td>{{student.student_id}}</td>
-            <td>{{ student.fname }}</td>
-            <td>{{ student.lname }}</td>
-            <td>{{ student.email }}</td>
-            <td>{{ student.phone }}</td>
-            <td>{{ student.branch_name }}</td>
-            <td>{{ student.qualification }}</td>
-            <td>{{ student.dob }}</td>
-            <td>{{ student.address }}</td>
-            <td>{{ student.country }}</td>
-            <td>{{ student.state }}</td>
-            <td>{{ student.city }}</td>
-            <td>{{ student.pincode }}</td>
-            <td>{{ student.hobbies_string }}</td>
-            <td>{{ student.created_date }}</td>
-            <td>
-                <a href="{{ url_for('delete_student', id=student.student_id) }}" class="btn btn-danger">Delete</a>
-                <a href="{{ url_for('edit_student', id=student.student_id) }}" class="btn btn-pencil">Edit</a>
-            </td>
-            <td>
-                <a href="{{ url_for('download_pdf', id=student.student_id) }}" class="btn btn-pencil">Download PDF</a>
-            </td>
+          <td>{{student.student_id}}</td>
+          <td>{{ student.fname }}</td>
+          <td>{{ student.lname }}</td>
+          <td>{{ student.email }}</td>
+          <td>{{ student.phone }}</td>
+          <td>{{ student.branch_name }}</td>
+          <td>{{ student.qualification }}</td>
+          <td>{{ student.dob }}</td>
+          <td>{{ student.address }}</td>
+          <td>{{ student.country }}</td>
+          <td>{{ student.state }}</td>
+          <td>{{ student.city }}</td>
+          <td>{{ student.pincode }}</td>
+          <td>{{ student.hobbies_string }}</td>
+          <td>{{ student.created_date }}</td>
+          <td>
+            <a
+              href="{{ url_for('delete_student', id=student.student_id) }}"
+              class="btn btn-danger"
+              >Delete</a
+            >
+            <a
+              href="{{ url_for('edit_student', id=student.student_id) }}"
+              class="btn btn-pencil"
+              >Edit</a
+            >
+          </td>
+          <td>
+            <a
+              href="{{ url_for('download_pdf', id=student.student_id) }}"
+              class="btn btn-pencil"
+              >Download PDF</a
+            >
+          </td>
         </tr>
         {% endfor %}
+      </tbody>
     </table>
+
     <script>
-        $(document).ready(function() {
-            var limit = 4;
-            var page = 1; // Initialize page to 1
-            function loadMoreItems() {
-                var offset = limit * page - limit; // Calculate offset for the new page
-                $.ajax({
-                    url: '/list/page/' + (page + 1), // Pass current page to server
-                    method: 'GET',
-                    data: {
-                        offset: offset,
-                        page: page,
-                        is_ajax: true
-                    },
-                    success: function(response) {
-                        $('#student-table').append(response); // Append response to table
-                        page++; // Increment page for the next request
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Error:', error);
-                    }
-                });
-            }
-        
-            $(window).scroll(function() {
-                if ($(window).scrollTop() + $(window).height() >= $(document).height()) {
-                    loadMoreItems(); // Automatically load more items
-                }
-            });
-        
-            $('#loadmore').click(function() {
-                loadMoreItems();
-            });
+      $(document).ready(function () {
+        var limit = 4;
+        var page = 1; // Initialize page to 1
+        function loadMoreItems() {
+          var offset = limit * page - limit; // Calculate offset for the new page
+          $.ajax({
+            url: "/list/page/" + (page + 1), // Pass current page to server
+            method: "GET",
+            data: {
+              offset: offset,
+              page: page,
+              is_ajax: true,
+            },
+            success: function (response) {
+              $("#student-table").append(response); // Append response to table
+              page++; // Increment page for the next request
+            },
+            error: function (xhr, status, error) {
+              console.error("Error:", error);
+            },
+          });
+        }
+        $(window).scroll(function () {
+          if (
+            $(window).scrollTop() + $(window).height() >=
+            $(document).height()
+          ) {
+            loadMoreItems(); // Automatically load more items
+          }
         });
-        
-        $("#search").on("keyup", function() {
-            var value = $(this).val().toLowerCase();
-            $("#student_details tr").filter(function() {
-                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-            });
+
+        $("#loadmore").click(function () {
+          loadMoreItems();
         });
+      });
+
+      $("#search").on("keyup", function () {
+        var value = $(this).val().toLowerCase();
+        $("#student_details tr").filter(function () {
+          $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+        });
+      });
     </script>
-    
-        
-</tbody>
+  </body>
 </html>

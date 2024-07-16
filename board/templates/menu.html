@@ -12,9 +12,7 @@
             <a href="/home" class="btn btn-primary">
                 <span class="glyphicon glyphicon-home"></span> Home
             </a>
-            <!--twig code-->
             {% if session.get('is_admin') %}
-            <!-- Admin-exclusive links -->
             <a href="/add_student" class="btn btn-primary">
                 <span class="glyphicon glyphicon-plus"></span> Register Form
             </a>

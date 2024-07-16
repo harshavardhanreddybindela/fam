@@ -1,216 +1,65 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.datatables.net/2.0.3/css/dataTables.dataTables.css"
+    />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-        <link rel="stylesheet" href="https://cdn.datatables.net/2.0.3/css/dataTables.dataTables.css" />
-        <script src="https://cdn.datatables.net/2.0.3/js/dataTables.js"></script>
-        <script>
-            $(document).ready(function() {
-                new DataTable('#student-table', {
-                order: [[3, 'desc']]
-            });
-            });
-        </script>
-<style>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/2.0.3/css/dataTables.dataTables.css">
-body {
-    font-family: Arial, Helvetica, sans-serif;
-    background-color: #f2f2f2;
-    margin: 0;
-    padding: 0;
-}
+    <link
+      rel="stylesheet"
+      href="https://cdn.datatables.net/2.0.3/css/dataTables.dataTables.css"
+    />
+    <link href="../static/style.css" rel="stylesheet" />
+    <script src="https://cdn.datatables.net/2.0.3/js/dataTables.js"></script>
+    <script>
+      $(document).ready(function () {
+        new DataTable("#student-table", {
+          order: [[3, "desc"]],
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <header>
+      <h1>Manage Branches</h1>
+      {% include("menu.html") %}
+    </header>
+    <h1>Import Branches from CSV</h1>
+    <table>
+      <tr>
+        <td class="forms-container" style="margin: 0 auto; max-width: 1000px">
+          <form
+            action="/crud_branches"
+            method="POST"
+            enctype="multipart/form-data"
+          >
+            <p><input type="file" id="files" name="files" /></p>
+            <input type="submit" value="Submit" />
+          </form>
+        </td>
+      </tr>
+    </table>
 
-.container {
-    max-width: 1000px;
-    margin: 20px;
-    padding: 16px;
-    border: 1px solid #ccc;
-    background-color: #fff;
-}
-
-.container p {
-    font-weight: bold;
-    font-size: 18px;
-    margin-bottom: 10px;
-}
-
-input[type=text], input[type=price] {
-    width: 90%;
-    padding: 10px;
-    margin: 5px 0;
-    border: none;
-    background: #f1f1f1;
-    border-radius: 5px;
-}
-
-input[type=text]:focus, input[type=price]:focus {
-    background-color: #ddd;
-    outline: 1px;
-}
-
-button {
-    background-color: #04AA6D;
-    color: white;
-    padding: 14px 20px;
-    margin: 8px 0;
-    border: none;
-    cursor: pointer;
-    width: 100%;
-    opacity: 0.9;
-    border-radius: 5px;
-}
-
-button:hover {
-    opacity: 1;
-}
-
-.cancelbtn {
-    padding: 14px 20px;
-    background-color: #f44336;
-}
-
-.cancelbtn, .signupbtn {
-    width: 100%;
-    border-radius: 5px;
-}
-
-.clearfix::after {
-    content: "";
-    clear: both;
-    display: table;
-}
-
-/* Styling for forms to be side by side */
-.forms-container {
-    display: flex;
-    justify-content: space-between;
-    max-width: 1000px;
-}
-
-body
-{
-            font-family: Arial, sans-serif;
-            background-color: #f2f2f2;
-            margin: 0;
-            padding: 0;
-}
-
-.container {
-            max-width: 1600px;
-            margin: 30px auto;
-            padding: 20px;
-            background-color: #fff;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-            border-radius: 5px;
-}
-
-h1 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #007bff;
-}
-
-table {
-            width: 100%;
-            border-collapse: collapse;
-}
-
-th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-}
-
-th {
-            background-color: #f2f2f2;
-}
-
-tr:nth-child(even) {
-            background-color: #f2f2f2;
-}
-
-.menu {
-            text-align: center;
-            margin: 30px 0;
-}
-
-.menu a {
-            color: #007bff;
-            text-decoration: none;
-            margin: 0 10px;
-}
-
-.menu a:hover {
-            color: #0056b3;
-}
-
-.menu i {
-            margin-right: 5px;
-        }
-
-</style>
-
-{% include("menu.html") %}
-
-</head>
-<body>
-<h1> Import Branches from CSV </h1>
-<table>
-    <tr>
-    <td class="forms-container" style="margin: 0 auto; max-width: 1000px;">
-        <form action="/crud_branches" method="POST" enctype="multipart/form-data">
-            <p><input type="file" id="files" name="files"></p>
-        <input type="submit" value="Submit">
-        </form>
-    </td>
-</tr>
-</table>
-
-<table id="student-table" class="table">
-    <thead>
+    <table id="student-table" class="table">
+      <thead>
         <tr>
-            <th>Branch ID</th>
-            <th>Branch Name</th>
+          <th>Branch ID</th>
+          <th>Branch Name</th>
         </tr>
-    </thead>
-    <tbody id="branches">
+      </thead>
+      <tbody id="branches">
         {% for branch in data['branch_list'] %}
         <tr>
-            <td>{{branch.branch_id}}</td>
-            <td>{{ branch.branch_name }}</td>
+          <td>{{branch.branch_id}}</td>
+          <td>{{ branch.branch_name }}</td>
         </tr>
         {% endfor %}
-    </tbody>
-</table>
-    <!-- Add Product Form -->
-    <form method="POST" action="/crud_branches" class="container">
-        <p><u>Add a Branch</u></p>
-        <label for="branch_name"><b>Branch Name:</b></label>
-        <input type="text" id="branch_name" name="branch_name" placeholder="Enter Branch Name">
-        <button type="submit" class="signupbtn" name="submit_add" id="submit_add">Add Product</button>
-    </form>
-
-    <!-- Delete Product Form -->
-    <form method="POST" action="/crud_branches" class="container">
-        <p><u>Delete a Branch</u></p>
-        <label for="branch_id"><b>Branch ID:</b></label>
-        <input type="text" name="branch_id" placeholder="Enter Branch ID">
-        <label for="branch_name"><b>Branch Name:</b></label>
-        <input type="text" name="branch_name" placeholder="Enter Branch Name">
-        <button type="submit" class="signupbtn" name="submit_delete" id="submit">Delete Product</button>
-    </form>
-
-    <!-- Update Product Form -->
-    <form method="POST" action="" class="container">
-        <p><u>Edit a Branch </u></p>
-        <label for="branch_id"><b>Branch ID:</b></label>
-        <input type="text" name="branch_id" required placeholder="Enter Branch ID">
-        <label for="branch_name"><b>Branch Name:</b></label>
-        <input type="text" name="branch_name" required placeholder="Enter Branch Name">
-        <button type="submit" class="signupbtn" name="submit_update" id="submit">Update Product</button>
-    </form>
-</div>
-
-</body>
+      </tbody>
+    </table>
+  </body>
 </html>

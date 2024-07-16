@@ -1,8 +1,15 @@
-{% include("menu.html") %}
-{% block header %} 
-  <h2>{% block title %}About{% endblock title %}</h2>
-{% endblock header %}
-
-{% block content %}
-  <p>This is a message board for friendly messages.</p>
-{% endblock content %}
+<html>
+  <head>
+    <link href="../static/style.css" rel="stylesheet" />
+  </head>
+  <body>
+    <header>
+      <h1>About</h1>
+      {% include("menu.html") %}
+    </header>
+    <p class="container">
+      <b>Name:</b> Harsha Vardhan Reddy Bindela <br />
+      <b>Email:</b> harshareddy4400@gmail.com
+    </p>
+  </body>
+</html>

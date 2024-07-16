@@ -14,8 +14,8 @@ from argon2.exceptions import InvalidHash
 from fpdf import FPDF
 import pandas as pd
 from flask import Flask, jsonify, make_response, redirect, render_template, request, Response, session, url_for,flash
-from flask_mail import Mail, Message
-from flask_session.__init__ import Session
+from flask_mail import Mail, Message # type: ignore
+from flask_session.__init__ import Session # type: ignore
 from werkzeug.security import check_password_hash, generate_password_hash
 import pymysql
 
@@ -38,7 +38,9 @@ Session(app)
 app.permanent_session_lifetime = timedelta(minutes=60)
 
 # Establish a database connection
+
 conn = db_connection()
+print(conn)
 conn.begin()
 # Mail configuration
 # These settings are necessary for Flask-Mail, allowing your app to send emails through a specified SMTP server
@@ -57,7 +59,6 @@ mail = Mail(app)
 
 @app.route('/signup', methods=['GET','POST'])
 def signup():
-    print("Entering to Signup")
     if request.method == 'POST':
         fname =request.form['fname']
         email = request.form['email']
@@ -102,29 +103,6 @@ def index():
 @app.route('/home', methods=['GET', 'POST'])
 @login_validation
 def home():
-    # """
-    # Serves the home page. Handles both GET and POST requests.
-    # On POST, it processes login attempts and file uploads.
-    # For file uploads, it saves the file and processes its content with parseCSV function.
-    # Sets a welcome message based on session info.
-    # """
-    # POST request handling logic
-    if request.method == 'POST':
-        if 'login' in request.form:
-            # Process login attempt
-            session['fname'] = 'UserFirstName'  # Example session variable setting
-            flash('Login successful')
-            return redirect(url_for('home'))
-        elif 'files' in request.files:
-            # Process file upload
-            uploaded_file = request.files['files']
-            if uploaded_file.filename != '':
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], uploaded_file.filename)
-                uploaded_file.save(file_path)
-                parseCSV(file_path)
-                flash('File uploaded and processed successfully')
-            return redirect(url_for('home'))
-    
     # GET request handling, setting welcome message
     if 'fname' in session:
         welcomeMsg = f"Welcome, {session['fname']}!"
@@ -257,19 +235,18 @@ def register():
             student_info['lname'] = request.form['lname']
             student_info['email'] = request.form['email']
             student_info['phone'] = request.form.get('phone', '')
-            student_info['branch'] = request.form['branch']
-            student_info['qualification'] = request.form['qualification']
             student_info['gender'] = request.form.get('gender', '')
             student_info['dob'] = request.form['dob']
+            student_info['branch'] = request.form['branch']
+            student_info['qualification'] = request.form['qualification']
             student_info['address'] = request.form['address']
             student_info['city'] = request.form['city']
             student_info['state'] = request.form['state']
             student_info['pincode'] = request.form['pincode']
             student_info['country'] = request.form['country']
             student_info['hobbies'] = '|'.join(request.form.getlist('hobbies[]'))
-            password = request.form['password']
-            ph = PasswordHasher()
-            hashed_password = ph.hash(password)  # Generate hashed password
+
+            print("--------------Entering--------------------")
             # Store hashed password in the database
             conn = db_connection()
             with conn.cursor() as cursor:
@@ -278,7 +255,7 @@ def register():
                                 student_info['fname'], student_info['lname'], student_info['email'], student_info['phone'],
                                 student_info['gender'], student_info['dob'], student_info['address'], student_info['city'],
                                 student_info['pincode'], student_info['country'], student_info['state'], student_info['branch'],
-                                student_info['qualification'], hashed_password))  # Insert hashed password
+                                student_info['qualification'])) 
                 student_id = cursor.lastrowid
                 for hobby_id in student_info['hobbies'].split('|'):
                     insert_hobby_query = post_hobbies()
@@ -364,8 +341,10 @@ def crud_branches():
             branch_id = request.form.get('branch_id')
             branch_name = request.form.get('branch_name')
             try:
+                print("Entering into delete branch")
                 data['delete_branch']=cursor.execute("DELETE FROM branches WHERE branch_id = %s OR branch_name = %s", (branch_id, branch_name))
                 conn.commit()
+                print(data['delete_branch'])
                 data['message'] = "Branch deleted successfully!"
             except pymysql.Error as e:
                 flash(f"An error occurred: {e}")
@@ -567,28 +546,29 @@ def email_check():
     cursor = conn.cursor()
     try:
         email = request.args.get('emailVal')
-        # validate the received values
         if email:
-            cursor.execute("SELECT * FROM student WHERE email=%s", email)
+            cursor.execute("SELECT * FROM student WHERE email=%s", (email,))
             row = cursor.fetchone()
             if row:
-                resp = jsonify('<span style="\'color:red;\'">Email unavailable</span>')
+                resp = jsonify({"message": "Email unavailable", "status": "danger"})
                 resp.status_code = 200
                 return resp
             else:
-                resp = jsonify('<span style="\'color:green;\'">Email available</span>')
+                resp = jsonify({"message": "Email available", "status": "success"})
                 resp.status_code = 200
                 return resp
         else:
-            resp = jsonify('<span style="\'color:red;\'">Email is required field.</span>')
+            resp = jsonify({"message": "Email is a required field.", "status": "danger"})
             resp.status_code = 200
             return resp
     except Exception as e:
-            flash(e)
+        flash(e)
     finally:
-            if not conn:
-                conn.close()
-    return True
+        if conn:
+            conn.close()
+    return jsonify({"message": "An error occurred.", "status": "danger"}), 500
+
+
 
 @app.route('/download_pdf/<int:id>', methods=['GET'])
 def download_pdf(id):
@@ -730,7 +710,7 @@ def login():
                 except Exception as e:
                     error = "Invalid email or password."
             else:
-                error = "User not found."
+                error = "Not Registered yet, please Signupx"
 
     except Exception as e:
         error = "An error occurred: {}".format(str(e))

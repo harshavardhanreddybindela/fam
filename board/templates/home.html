@@ -1,12 +1,23 @@
 <html>
-<head>
-  <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Home Page</title>
-  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
-
-</head>
-<body>
-  {% include("menu.html") %}
-</body>
+    <link
+      rel="stylesheet"
+      href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+    />
+    <link href="../static/style.css" rel="stylesheet" />
+  </head>
+  <body>
+    <header>
+      <h1>Student Home Page</h1>
+      {% include("menu.html") %}
+    </header>
+    <div class="welcomeMsg">
+      {% with messages = get_flashed_messages() %} {% if messages %}
+      <div class="alert alert-success" role="alert">{{ messages[0] }}</div>
+      {% endif %} {% endwith %}
+      <h1>{{ message }}</h1>
+    </div>
+  </body>
 </html>
-
