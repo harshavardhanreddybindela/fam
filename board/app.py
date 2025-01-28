@@ -1,6 +1,6 @@
 # Standard library imports
 import csv
-from datetime import timedelta
+from datetime import datetime, timedelta
 import io
 import os
 import smtplib
@@ -8,14 +8,15 @@ import sys
 import traceback
 from functools import wraps
 
-# Third-party library imports
+# Third-party library d
 from argon2 import PasswordHasher, verify_password
 from argon2.exceptions import InvalidHash
+from dotenv import load_dotenv
 from fpdf import FPDF
 import pandas as pd
 from flask import Flask, jsonify, make_response, redirect, render_template, request, Response, session, url_for,flash
-from flask_mail import Mail, Message # type: ignore
-from flask_session.__init__ import Session # type: ignore
+from flask_mail import Mail, Message 
+from flask_session.__init__ import Session 
 from werkzeug.security import check_password_hash, generate_password_hash
 import pymysql
 
@@ -26,7 +27,7 @@ from db_functions import db_connection, get_branch_list, get_cities_list, get_co
 
 # Create a new Flask application instance
 app = Flask(__name__)
-
+load_dotenv()
 
 
 # Configure session to be not permanent and use the filesystem for storage
@@ -40,15 +41,15 @@ app.permanent_session_lifetime = timedelta(minutes=60)
 # Establish a database connection
 
 conn = db_connection()
-print(conn)
 conn.begin()
 # Mail configuration
 # These settings are necessary for Flask-Mail, allowing your app to send emails through a specified SMTP server
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'harshareddy4400@gmail.com'
-app.config['MAIL_PASSWORD'] = 'gdzc jhpd tyqs aaks'
+  # Load variables from .env file
+app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')
 
 # File upload configuration
 app.config['UPLOAD_FOLDER'] = 'uploads/'
@@ -92,7 +93,54 @@ def signup():
             conn.close()
 
     return render_template('signup.html')
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    error = None
+    conn = None
+    cursor = None
+    try:
+        if request.method == 'POST':
+            email = request.form['email']
+            password = request.form['password']
+            login_status = "Failed"
+            response = make_response(redirect(url_for('register')))
+            response.set_cookie('email', email)
+            if not email or not password:
+                error = "Please enter both email and password."
+                return render_template('login.html', error=error)
 
+            conn = db_connection()
+            cursor = conn.cursor()
+            cursor.execute('SELECT student_id, fname, email, password,is_admin FROM student WHERE email = %s', (email,))
+            user = cursor.fetchone()
+
+            if user:
+                hashed_password = user['password']
+                ph = PasswordHasher()
+                try:
+                    ph.verify(hashed_password, password)
+                    session['user_id'] = user['student_id']
+                    session['username'] = user['email']
+                    session['fname'] = user['fname']
+                    session['is_admin'] = user['is_admin']
+                    login_status = "Successful"
+                    send_login_email(email, login_status)
+                    return redirect(url_for('home'))
+                except Exception as e:
+                    error = "Invalid email or password."
+            else:
+                error = "Not Registered yet, please Signupx"
+
+    except Exception as e:
+        error = "An error occurred: {}".format(str(e))
+        traceback.print_exc()
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+    return render_template('login.html', error=error)
 
 @app.route("/")
 def index():
@@ -147,6 +195,7 @@ def parseCSV(filepath):
 #     if not session.get("user_id") and request.endpoint not in ['login']:
 #         return redirect(url_for('login'))
 
+#add_student is for the inserting new student into the database
 @app.route('/add_student')
 @login_validation
 def add_student():
@@ -171,10 +220,13 @@ def add_student():
         
         cursor.execute("SELECT hobbies_id, hobby FROM hobbies ORDER BY hobbies_id ASC")
         data['hobbies'] = cursor.fetchall()
-        return render_template('add_student.html', data = data)
+        return render_template('add_student.html', data = data),200
     except Exception as e:
         flash("Error fetching branches,qualification,country,hobbies:", e)
         return render_template('add_student.html', data=data)
+    
+# For mapping states based on country
+# @param:{int} is passes int:id to get the states of that particular country table
 
 @app.route('/states_by_country/<int:country_id>')
 def states_by_country(country_id):
@@ -246,7 +298,6 @@ def register():
             student_info['country'] = request.form['country']
             student_info['hobbies'] = '|'.join(request.form.getlist('hobbies[]'))
 
-            print("--------------Entering--------------------")
             # Store hashed password in the database
             conn = db_connection()
             with conn.cursor() as cursor:
@@ -313,58 +364,81 @@ def register():
 
 @app.route('/crud_branches', methods=['POST', 'GET'])
 def crud_branches():
-    data={}
+    data = {}
     conn = db_connection()
     cursor = conn.cursor()
-    with cursor:
-            data['branch_list'] = get_branch_list(cursor)
-    if request.method == 'POST':
-        if 'files' in request.files:
-            uploaded_file = request.files['files']
-            if uploaded_file.filename != '':
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], uploaded_file.filename)
-                uploaded_file.save(file_path)
-                parseCSV(file_path)
-                flash('File uploaded and processed successfully')
-                conn.rollback()
-        elif 'submit_add' in request.form:
-            branch_name = request.form.get('branch_name')
-            try:
-                data['add_branch']=cursor.execute("INSERT INTO branches (branch_name) VALUES (%s)", (branch_name,))
-                conn.commit()
-                data['message'] = "Branch added successfully!"
-            except pymysql.Error as e:
-                flash(f"An error occurred: {e}")
-                conn.rollback()
-                
-        elif 'submit_delete' in request.form:
-            branch_id = request.form.get('branch_id')
-            branch_name = request.form.get('branch_name')
-            try:
-                print("Entering into delete branch")
-                data['delete_branch']=cursor.execute("DELETE FROM branches WHERE branch_id = %s OR branch_name = %s", (branch_id, branch_name))
-                conn.commit()
-                print(data['delete_branch'])
-                data['message'] = "Branch deleted successfully!"
-            except pymysql.Error as e:
-                flash(f"An error occurred: {e}")
-                conn.rollback()
+    
+    try:
+        # Fetch existing branch list
+        data['branch_list'] = get_branch_list(cursor)
 
-        elif 'submit_update' in request.form:  # Update a Branch
-            branch_id = request.form.get('branch_id')
-            branch_name = request.form.get('branch_name')
-            try:
-                data['update_branch']=cursor.execute("UPDATE branches SET branch_name = %s WHERE branch_id = %s", (branch_name, branch_id))
-                conn.commit()
-                data['message'] = "Branch updated successfully!"
-            except pymysql.Error as e:
-                flash(f"An error occurred: {e}")
-                conn.rollback()
-        else:
-            flash("Nothing is updated in branches")
-        cursor.close()
-        conn.close()
-    return render_template('crud_branches.html',data=data)
+        if request.method == 'POST':
+            # Handle CSV upload
+            if 'files' in request.files:
+                uploaded_file = request.files['files']
+                if uploaded_file and uploaded_file.filename.endswith('.csv'):
+                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], uploaded_file.filename)
+                    uploaded_file.save(file_path)
+                    try:
+                        parseCSV(file_path)
+                        flash('File uploaded and processed successfully', 'success')
+                    except Exception as e:
+                        flash(f"Error processing CSV file: {e}", 'danger')
+                else:
+                    flash("Invalid file format. Please upload a CSV file.", 'danger')
+
+            # Handle adding a branch
+            elif 'submit_add' in request.form:
+                branch_name = request.form.get('branch_name')
+                if branch_name:
+                    try:
+                        cursor.execute("INSERT INTO branches (branch_name) VALUES (%s)", (branch_name,))
+                        conn.commit()
+                        flash("Branch added successfully!", 'success')
+                    except pymysql.Error as e:
+                        flash(f"An error occurred while adding the branch: {e}", 'danger')
+                        conn.rollback()
+                else:
+                    flash("Branch name cannot be empty.", 'warning')
+
+            # Handle deleting a branch
+            elif 'submit_delete' in request.form:
+                branch_id = request.form.get('branch_id')
+                branch_name = request.form.get('branch_name')
+                try:
+                    cursor.execute("DELETE FROM branches WHERE branch_id = %s OR branch_name = %s", (branch_id, branch_name))
+                    conn.commit()
+                    flash("Branch deleted successfully!", 'success')
+                except pymysql.Error as e:
+                    flash(f"An error occurred while deleting the branch: {e}", 'danger')
+                    conn.rollback()
+
+            # Handle updating a branch
+            elif 'submit_update' in request.form:
+                branch_id = request.form.get('branch_id')
+                branch_name = request.form.get('branch_name')
+                if branch_id and branch_name:
+                    try:
+                        cursor.execute("UPDATE branches SET branch_name = %s WHERE branch_id = %s", (branch_name, branch_id))
+                        conn.commit()
+                        flash("Branch updated successfully!", 'success')
+                    except pymysql.Error as e:
+                        flash(f"An error occurred while updating the branch: {e}", 'danger')
+                        conn.rollback()
+                else:
+                    flash("Branch ID and name cannot be empty.", 'warning')
+
+            else:
+                flash("No action specified.", 'warning')
+    except Exception as e:
+        flash(f"An unexpected error occurred: {e}", 'danger')
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+    return render_template('crud_branches.html', data=data)
 
 
 @app.route('/list/', defaults={'page': 1}, methods=['GET', 'POST'])
@@ -621,7 +695,7 @@ def download_pdf(id):
         pdf.cell(page_width, 10, '- end of report -', align='C')
 
         output = pdf.output(dest='S').encode('latin-1')
-        return Response(output, mimetype='application/pdf', headers={'Content-Disposition': 'attachment;filename=student_report.pdf'})
+        return Response(output, mimetype='application/pdf', headers={'Content-Disposition': 'attachment;filename=student_id.pdf'})
     except Exception as e:
         flash(e)
         return "An error occurred while generating the report for the specified student.", e
@@ -677,53 +751,24 @@ def encrypt_password(password):
 def validate_password(password, stored_hash):
     return check_password_hash(stored_hash, password)
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    error = None
-    conn = None
-    cursor = None
+def send_login_email(email, status):
     try:
-        if request.method == 'POST':
-            email = request.form['email']
-            password = request.form['password']
-            response = make_response(redirect(url_for('register')))
-            response.set_cookie('email', email)
-            if not email or not password:
-                error = "Please enter both email and password."
-                return render_template('login.html', error=error)
-
-            conn = db_connection()
-            cursor = conn.cursor()
-            cursor.execute('SELECT student_id, fname, email, password,is_admin FROM student WHERE email = %s', (email,))
-            user = cursor.fetchone()
-
-            if user:
-                hashed_password = user['password']
-                ph = PasswordHasher()
-                try:
-                    ph.verify(hashed_password, password)
-                    session['user_id'] = user['student_id']
-                    session['username'] = user['email']
-                    session['fname'] = user['fname']
-                    session['is_admin'] = user['is_admin']
-                    return redirect(url_for('home'))
-                except Exception as e:
-                    error = "Invalid email or password."
-            else:
-                error = "Not Registered yet, please Signupx"
-
+        msg = Message(
+            "Login Attempt Notification",
+            recipients=[email],  # Recipient email
+            sender=''
+        )
+        msg.body = f"""
+        Login Attempt Details:
+        Email: {email}
+        Status: {status}
+        Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+        """
+        mail.send(msg)
+        print("Login notification email sent successfully.")
     except Exception as e:
-        error = "An error occurred: {}".format(str(e))
-        traceback.print_exc()
-
-    finally:
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-    return render_template('login.html', error=error)
-
-
+        print(f"Failed to send login notification email: {e}")
+        
 @app.route('/about')
 @login_validation
 def about():
@@ -738,8 +783,6 @@ def contact():
 def logout():
     session.clear()
     return redirect(url_for('login'))
-
-
 
 # @app.route("/load_more")
 # def load_more():

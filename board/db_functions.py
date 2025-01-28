@@ -30,7 +30,6 @@ def get_students(sort='student_id', order='asc', offset=0, limit=4, search=None)
     LEFT JOIN student_hobbies sh ON sh.student_id = s.student_id
     LEFT JOIN hobbies h ON h.hobbies_id = sh.hobbies_id
     """
-    
     search_query = ""
     if search:
         search_query = """

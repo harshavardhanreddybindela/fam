@@ -60,14 +60,14 @@
           <th>Qualification</th>
           <th>DOB</th>
           <th>Address</th>
-          <th>Pincode</th>
+          <th>City</th>
           <th>Country</th>
           <th>State</th>
-          <th>City</th>
+          <th>Pincode</th>
           <th>Hobbies</th>
           <th>Created on</th>
           <th>Action</th>
-          <th>Download</th>
+          <th>Generate Student ID</th>
         </tr>
       </thead>
       <tbody id="student_details">
@@ -104,7 +104,7 @@
             <a
               href="{{ url_for('download_pdf', id=student.student_id) }}"
               class="btn btn-pencil"
-              >Download PDF</a
+              >Generate ID</a
             >
           </td>
         </tr>
