@@ -1,1 +1,2 @@
 .env
+.board/flask_session/*
